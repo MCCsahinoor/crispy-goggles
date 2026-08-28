@@ -26,6 +26,7 @@ import WifiManager from "react-native-wifi-reborn";
 import FilesPanel from "./src/component/FilesPanel";
 import GlobalConnectPanel from "./src/component/GlobalConnectPanel";
 import HistoryPanel, { HistoryEntry } from "./src/component/HistoryPanel";
+import HowToUseModal from "./src/component/HowToUseModal";
 import LocalConnectPanel from "./src/component/LocalConnectPanel";
 import SendPanel from "./src/component/SendPanel";
 import SettingsPanel from "./src/component/SettingsPanel";
@@ -76,7 +77,7 @@ function AppShell() {
   const styles = useThemedStyles(createStyles);
   const [screen, setScreen] = useState<Screen>("connect");
   const [homeTab, setHomeTab] = useState<HomeTab>("connect");
-  const [helpOpen, setHelpOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(true);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [connectionMode, setConnectionMode] = useState<ConnectionMode>("global");
   const [connection, setConnection] = useState<ShareConnection | null>(null);
@@ -561,7 +562,7 @@ function AppShell() {
                     }}
                   />
                 ) : homeTab === "settings" ? (
-                  <SettingsPanel />
+                  <SettingsPanel onOpenHowTo={() => setHelpOpen(true)} />
                 ) : homeTab === "send" ? (
                   <SendPanel onToast={showToast} />
                 ) : connectionMode === "global" ? (
@@ -704,35 +705,7 @@ function AppShell() {
         </SafeAreaView>
       )}
 
-      <Modal
-        transparent
-        visible={helpOpen}
-        animationType="fade"
-        statusBarTranslucent
-        onRequestClose={() => setHelpOpen(false)}
-      >
-        <Pressable style={styles.helpBackdrop} onPress={() => setHelpOpen(false)}>
-          <Pressable style={styles.helpCard} onPress={() => { }}>
-            <Text style={styles.helpTitle}>How to connect</Text>
-            <Text style={styles.helpSection}>Global link</Text>
-            <Text style={styles.helpBody}>
-              Use this when Filora Desktop is in Global link mode. Paste the share URL or scan the
-              Share QR. The phone can use mobile data.
-            </Text>
-            <Text style={styles.helpSection}>Local network</Text>
-            <Text style={styles.helpBody}>
-              Join the PC hotspot or the same Wi-Fi, then scan the Share QR or paste the local
-              link.
-            </Text>
-            <Pressable
-              style={({ pressed }) => [styles.helpClose, pressed && styles.pressed]}
-              onPress={() => setHelpOpen(false)}
-            >
-              <Text style={styles.helpCloseText}>Got it</Text>
-            </Pressable>
-          </Pressable>
-        </Pressable>
-      </Modal>
+      <HowToUseModal visible={helpOpen} onClose={() => setHelpOpen(false)} />
 
       <Modal
         transparent
@@ -997,52 +970,6 @@ function createStyles(colors: ThemeColors) {
       fontWeight: "600",
       color: colors.text,
       textAlign: "center",
-    },
-    helpBackdrop: {
-      flex: 1,
-      backgroundColor: colors.overlay,
-      alignItems: "center",
-      justifyContent: "center",
-      paddingHorizontal: 24,
-    },
-    helpCard: {
-      width: "100%",
-      backgroundColor: colors.card,
-      borderRadius: radius.lg,
-      padding: 20,
-      gap: 8,
-      borderWidth: 1,
-      borderColor: colors.border,
-    },
-    helpTitle: {
-      color: colors.text,
-      fontSize: 18,
-      fontWeight: "800",
-      marginBottom: 6,
-    },
-    helpSection: {
-      color: colors.blueSoft,
-      fontSize: 13,
-      fontWeight: "800",
-      marginTop: 6,
-    },
-    helpBody: {
-      color: colors.textMuted,
-      fontSize: 14,
-      lineHeight: 20,
-    },
-    helpClose: {
-      marginTop: 12,
-      backgroundColor: colors.cardAlt,
-      borderRadius: radius.md,
-      paddingVertical: 12,
-      alignItems: "center",
-      borderWidth: 1,
-      borderColor: colors.border,
-    },
-    helpCloseText: {
-      color: colors.text,
-      fontWeight: "700",
     },
     pressed: {
       opacity: 0.75,

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Linking,
   Modal,
   Platform,
   Pressable,
@@ -33,6 +34,11 @@ import {
   type ThemeMode,
 } from "../theme";
 import { checkAndPromptAppUpdate, getAppVersion } from "../lib/inAppUpdates";
+import {
+  FILORA_PRIVACY_URL,
+  FILORA_WEBSITE_URL,
+  FILORA_WINDOWS_DOWNLOAD_URL,
+} from "../lib/links";
 import { Divider } from "./ui";
 
 const THEME_OPTIONS: { mode: ThemeMode; icon: keyof typeof Ionicons.glyphMap }[] = [
@@ -85,7 +91,11 @@ function SettingsRow({
   );
 }
 
-export default function SettingsPanel() {
+type SettingsPanelProps = {
+  onOpenHowTo?: () => void;
+};
+
+export default function SettingsPanel({ onOpenHowTo }: SettingsPanelProps) {
   const { colors, mode, setMode } = useTheme();
   const styles = useThemedStyles(createStyles);
   const [language, setLanguage] = useState("English");
@@ -174,10 +184,7 @@ export default function SettingsPanel() {
   }, []);
 
   const handleDesktop = useCallback(() => {
-    Alert.alert(
-      "Get Filora Desktop",
-      "Install Filora.exe on your Windows PC, then connect this phone with a share link or QR code.",
-    );
+    Linking.openURL(FILORA_WINDOWS_DOWNLOAD_URL);
   }, []);
 
   const handleRequestPermission = useCallback(
@@ -225,6 +232,13 @@ export default function SettingsPanel() {
     <View style={styles.wrap}>
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>General</Text>
+        <SettingsRow
+          icon="help-circle-outline"
+          title="How to use"
+          subtitle="Step-by-step instructions"
+          chevron
+          onPress={onOpenHowTo}
+        />
         <SettingsRow
           icon="globe-outline"
           title="Language"
@@ -304,6 +318,13 @@ export default function SettingsPanel() {
           onPress={() => setAboutOpen(true)}
         />
         <SettingsRow
+          icon="globe-outline"
+          title="Official website"
+          subtitle="filora-two.vercel.app"
+          chevron
+          onPress={() => Linking.openURL(FILORA_WEBSITE_URL)}
+        />
+        <SettingsRow
           icon="shield-outline"
           title="Privacy policy"
           onPress={() => setPrivacyOpen(true)}
@@ -318,6 +339,7 @@ export default function SettingsPanel() {
           icon="desktop-outline"
           title="Get Filora Desktop"
           subtitle="Download the desktop app for Windows"
+          chevron
           onPress={handleDesktop}
         />
         <SettingsRow iconLabel="#" title="Version" subtitle={getAppVersion()} />
@@ -418,6 +440,13 @@ export default function SettingsPanel() {
               account. Share links you paste and files you download stay on this device unless you
               share them yourself.
             </Text>
+            <Pressable
+              style={({ pressed }) => [styles.readMore, pressed && styles.pressed]}
+              onPress={() => Linking.openURL(FILORA_PRIVACY_URL)}
+            >
+              <Text style={styles.readMoreText}>Read more</Text>
+              <Ionicons name="open-outline" size={15} color={colors.blueSoft} />
+            </Pressable>
             <Pressable style={styles.modalClose} onPress={() => setPrivacyOpen(false)}>
               <Text style={styles.modalCloseText}>Close</Text>
             </Pressable>
@@ -512,6 +541,19 @@ function createStyles(colors: ThemeColors) {
       color: colors.textMuted,
       fontSize: 14,
       lineHeight: 20,
+    },
+    readMore: {
+      flexDirection: "row" as const,
+      alignItems: "center" as const,
+      alignSelf: "flex-start" as const,
+      gap: 6,
+      marginTop: 8,
+      marginBottom: 4,
+    },
+    readMoreText: {
+      color: colors.blueSoft,
+      fontSize: 14,
+      fontWeight: "700" as const,
     },
     modalClose: {
       marginTop: 8,
