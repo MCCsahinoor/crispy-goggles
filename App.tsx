@@ -23,6 +23,7 @@ import {
 } from "react-native-safe-area-context";
 import WifiManager from "react-native-wifi-reborn";
 
+import AdBanner from "./src/component/AdBanner";
 import FilesPanel from "./src/component/FilesPanel";
 import GlobalConnectPanel from "./src/component/GlobalConnectPanel";
 import HistoryPanel, { HistoryEntry } from "./src/component/HistoryPanel";
@@ -46,6 +47,7 @@ import {
   WifiCredentials,
 } from "./src/lib/filedrop";
 import { useInAppUpdates } from "./src/hooks/useInAppUpdates";
+import { useMobileAds } from "./src/hooks/useMobileAds";
 import { requestLocationPermission } from "./src/lib/permissions";
 import { saveFileToAppFolder } from "./src/lib/saveDownload";
 import {
@@ -73,6 +75,7 @@ export default function App() {
 
 function AppShell() {
   useInAppUpdates();
+  useMobileAds();
   const { colors, scheme } = useTheme();
   const styles = useThemedStyles(createStyles);
   const [screen, setScreen] = useState<Screen>("connect");
@@ -607,6 +610,10 @@ function AppShell() {
                 )}
               </ScrollView>
 
+              <View style={styles.adBleed}>
+                <AdBanner />
+              </View>
+
               <View style={styles.bottomBar}>
                 <Pressable
                   style={({ pressed }) => [styles.bottomItem, pressed && styles.pressed]}
@@ -919,6 +926,9 @@ function createStyles(colors: ThemeColors) {
     },
     statusBannerWarningText: {
       color: colors.warning,
+    },
+    adBleed: {
+      marginHorizontal: -16,
     },
     bottomBar: {
       flexDirection: "row",

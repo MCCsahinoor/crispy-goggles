@@ -438,7 +438,7 @@ export default function SettingsPanel({ onOpenHowTo }: SettingsPanelProps) {
             <Text style={styles.modalBody}>
               Filora connects directly to Filora on your PC. It does not require an
               account. Share links you paste and files you download stay on this device unless you
-              share them yourself.
+              share them yourself. The app shows ads from Google AdMob.
             </Text>
             <Pressable
               style={({ pressed }) => [styles.readMore, pressed && styles.pressed]}

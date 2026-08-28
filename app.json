@@ -53,12 +53,24 @@
           }
         }
       ],
+      "./plugins/withKotlinMetadataCompat.js",
       [
         "expo-camera",
         {
           "cameraPermission": "Allow Filora to scan the Share QR from your PC."
         }
+      ],
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-1175856783542792~9711215895",
+          "iosAppId": "ca-app-pub-3940256099942544~1458002511"
+        }
       ]
     ]
+  },
+  "react-native-google-mobile-ads": {
+    "android_app_id": "ca-app-pub-1175856783542792~9711215895",
+    "ios_app_id": "ca-app-pub-3940256099942544~1458002511"
   }
 }
