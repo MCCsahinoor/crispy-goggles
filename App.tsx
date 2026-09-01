@@ -6,6 +6,7 @@ import { StatusBar } from "expo-status-bar";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Image,
   Linking,
   Modal,
   Platform,
@@ -44,10 +45,12 @@ import {
   unlockSession,
   isLocalConnection,
   validateModeForConnection,
+  authHeaders,
   WifiCredentials,
 } from "./src/lib/filedrop";
 import { useInAppUpdates } from "./src/hooks/useInAppUpdates";
 import { useMobileAds } from "./src/hooks/useMobileAds";
+import { useAppInterstitial } from "./src/hooks/useAppInterstitial";
 import { requestLocationPermission } from "./src/lib/permissions";
 import { saveFileToAppFolder } from "./src/lib/saveDownload";
 import {
@@ -76,6 +79,7 @@ export default function App() {
 function AppShell() {
   useInAppUpdates();
   useMobileAds();
+  const showInterstitial = useAppInterstitial();
   const { colors, scheme } = useTheme();
   const styles = useThemedStyles(createStyles);
   const [screen, setScreen] = useState<Screen>("connect");
@@ -170,6 +174,9 @@ function AppShell() {
       } catch (error) {
         if (error instanceof Error && error.message === "PASSWORD_REQUIRED") {
           setScreen("password");
+          if (token) {
+            showToast("Could not unlock. Check the password and try again.");
+          }
           return;
         }
         showToast(error instanceof Error ? error.message : "Something went wrong.");
@@ -284,7 +291,7 @@ function AppShell() {
         const saved = await saveFileToAppFolder(
           url,
           file.name,
-          authToken ? { "X-FileDrop-Auth": authToken } : undefined,
+          authToken ? authHeaders(authToken) : undefined,
           {
             onAwaitingUser: () => setSavingFileId(null),
           },
@@ -431,9 +438,7 @@ function AppShell() {
       {scanning ? (
         <View style={styles.scanContainer}>
           <StatusBar style="light" />
-          <CameraView
-            style={styles.camera}
-            barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
+          <CameraView style={styles.camera} barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
             onBarcodeScanned={
               scanning
                 ? ({ data, raw }) => {
@@ -444,10 +449,7 @@ function AppShell() {
           />
           <SafeAreaView edges={["bottom"]} style={styles.scanOverlay}>
             <Text style={styles.scanTitle}>{scanTitle}</Text>
-            <Pressable
-              style={({ pressed }) => [styles.scanCancel, pressed && styles.pressed]}
-              onPress={() => setScanning(false)}
-            >
+            <Pressable style={({ pressed }) => [styles.scanCancel, pressed && styles.pressed]} onPress={() => setScanning(false)} >
               <Text style={styles.scanCancelText}>Cancel</Text>
             </Pressable>
           </SafeAreaView>
@@ -455,24 +457,18 @@ function AppShell() {
       ) : (
         <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
           <StatusBar style={scheme === "dark" ? "light" : "dark"} />
-          <LinearGradient
-            colors={[glowColor, "transparent"]}
-            style={styles.ambientGlow}
-          />
+          <LinearGradient colors={[glowColor, "transparent"]} style={styles.ambientGlow} />
 
           <View style={styles.header}>
             <View style={styles.headerLeft}>
-              <LinearGradient
-                colors={gradients.logo}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
+              <Image
+                source={require("./assets/logo.png")}
                 style={styles.logo}
-              >
-                <Ionicons name="paper-plane" size={18} color="#FFFFFF" />
-              </LinearGradient>
+                accessibilityLabel="Filora"
+              />
               <View style={styles.headerText}>
                 <Text style={styles.title}>Filora</Text>
-                <Text style={styles.subtitle}>Connect to Filora on your Windows</Text>
+                <Text style={styles.subtitle}>Connect to Filora on your PC</Text>
               </View>
             </View>
             {screen === "files" ? (
@@ -481,11 +477,7 @@ function AppShell() {
                 <Text style={styles.connectedBadgeText}>Connected</Text>
               </View>
             ) : (
-              <Pressable
-                onPress={() => setHelpOpen(true)}
-                hitSlop={10}
-                style={({ pressed }) => pressed && styles.pressed}
-              >
+              <Pressable onPress={() => setHelpOpen(true)} hitSlop={10} style={({ pressed }) => pressed && styles.pressed} >
                 <Ionicons name="help-circle-outline" size={26} color={colors.text} />
               </Pressable>
             )}
@@ -495,65 +487,30 @@ function AppShell() {
             <>
               {homeTab === "connect" && (
                 <View style={styles.modeRow}>
-                  <Pressable
-                    style={[
-                      styles.modeTab,
-                      connectionMode === "global" && styles.modeTabGlobal,
-                    ]}
+                  <Pressable style={[styles.modeTab, connectionMode === "global" && styles.modeTabGlobal]}
                     onPress={() => {
                       setConnectionMode("global");
                       setLocalConnectError("");
                       clearToast();
                     }}
                   >
-                    <Ionicons
-                      name="globe-outline"
-                      size={16}
-                      color={connectionMode === "global" ? colors.blueSoft : colors.textDim}
-                    />
-                    <Text
-                      style={[
-                        styles.modeTabText,
-                        connectionMode === "global" && styles.modeTabTextGlobal,
-                      ]}
-                    >
-                      Global link
-                    </Text>
+                    <Ionicons name="globe-outline" size={16} color={connectionMode === "global" ? colors.blueSoft : colors.textDim} />
+                    <Text style={[styles.modeTabText, connectionMode === "global" && styles.modeTabTextGlobal]}> Global link </Text>
                   </Pressable>
-                  <Pressable
-                    style={[
-                      styles.modeTab,
-                      connectionMode === "local" && styles.modeTabLocal,
-                    ]}
+                  <Pressable style={[styles.modeTab, connectionMode === "local" && styles.modeTabLocal]}
                     onPress={() => {
                       setConnectionMode("local");
                       setLocalConnectError("");
                       clearToast();
                     }}
                   >
-                    <Ionicons
-                      name="wifi"
-                      size={16}
-                      color={connectionMode === "local" ? colors.purpleSoft : colors.textDim}
-                    />
-                    <Text
-                      style={[
-                        styles.modeTabText,
-                        connectionMode === "local" && styles.modeTabTextLocal,
-                      ]}
-                    >
-                      Local network
-                    </Text>
+                    <Ionicons name="wifi" size={16} color={connectionMode === "local" ? colors.purpleSoft : colors.textDim} />
+                    <Text style={[styles.modeTabText, connectionMode === "local" && styles.modeTabTextLocal]} > Local network </Text>
                   </Pressable>
                 </View>
               )}
 
-              <ScrollView
-                style={styles.scrollView}
-                contentContainerStyle={styles.scrollContent}
-                keyboardShouldPersistTaps="handled"
-                showsVerticalScrollIndicator={false}
-              >
+              <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} >
                 {homeTab === "history" ? (
                   <HistoryPanel
                     entries={history}
@@ -603,9 +560,7 @@ function AppShell() {
 
                 {!!message && !loading && (homeTab === "connect" || homeTab === "send") && (
                   <View style={[styles.statusBanner, styles.statusBannerWarning]}>
-                    <Text style={[styles.statusBannerText, styles.statusBannerWarningText]}>
-                      {message}
-                    </Text>
+                    <Text style={[styles.statusBannerText, styles.statusBannerWarningText]}> {message} </Text>
                   </View>
                 )}
               </ScrollView>
@@ -651,12 +606,7 @@ function AppShell() {
           )}
 
           {screen === "password" && (
-            <ScrollView
-              style={styles.scrollView}
-              contentContainerStyle={styles.scrollContent}
-              keyboardShouldPersistTaps="handled"
-              showsVerticalScrollIndicator={false}
-            >
+            <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} >
               <View style={styles.panel}>
                 <Text style={styles.label}>Access password</Text>
                 <TextInput
@@ -667,30 +617,34 @@ function AppShell() {
                   secureTextEntry
                   style={styles.input}
                 />
-                <Pressable
-                  style={({ pressed }) => [styles.unlockButton, pressed && styles.pressed]}
-                  onPress={handleUnlock}
+                <Pressable style={({ pressed }) => [styles.unlockButton, pressed && styles.pressed]}
+                  onPress={() => {
+                    void (async () => {
+                      await showInterstitial();
+                      await handleUnlock();
+                    })();
+                  }}
                   disabled={loading}
                 >
-                  <LinearGradient
-                    colors={gradients.connect}
-                    start={{ x: 0, y: 0.5 }}
-                    end={{ x: 1, y: 0.5 }}
-                    style={styles.unlockGradient}
-                  >
+                  <LinearGradient colors={gradients.connect} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={styles.unlockGradient} >
                     <Text style={styles.unlockText}>Unlock files</Text>
                   </LinearGradient>
                 </Pressable>
-                <Pressable style={styles.linkButton} onPress={resetSession}>
+                <Pressable style={styles.linkButton}
+                  onPress={() => {
+                    void (async () => {
+                      await showInterstitial();
+                      resetSession();
+                    })();
+                  }}
+                >
                   <Text style={styles.linkButtonText}>Use another link</Text>
                 </Pressable>
               </View>
 
               {!!message && !loading && (
                 <View style={[styles.statusBanner, styles.statusBannerWarning]}>
-                  <Text style={[styles.statusBannerText, styles.statusBannerWarningText]}>
-                    {message}
-                  </Text>
+                  <Text style={[styles.statusBannerText, styles.statusBannerWarningText]}> {message} </Text>
                 </View>
               )}
             </ScrollView>
@@ -771,8 +725,7 @@ function createStyles(colors: ThemeColors) {
       width: 42,
       height: 42,
       borderRadius: 12,
-      alignItems: "center",
-      justifyContent: "center",
+      overflow: "hidden",
     },
     headerText: {
       flex: 1,

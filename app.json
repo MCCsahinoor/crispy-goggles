@@ -2,7 +2,7 @@
   "expo": {
     "name": "Filora",
     "slug": "filora",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -14,7 +14,7 @@
       }
     },
     "android": {
-      "versionCode": 1,
+      "versionCode": 2,
       "adaptiveIcon": {
         "backgroundColor": "#0084FF",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -54,6 +54,7 @@
         }
       ],
       "./plugins/withKotlinMetadataCompat.js",
+      "./plugins/withReleaseSigning.js",
       [
         "expo-camera",
         {
@@ -68,9 +69,5 @@
         }
       ]
     ]
-  },
-  "react-native-google-mobile-ads": {
-    "android_app_id": "ca-app-pub-1175856783542792~9711215895",
-    "ios_app_id": "ca-app-pub-3940256099942544~1458002511"
   }
 }

@@ -100,6 +100,7 @@ export function ConnectButton({ onPress, disabled, label = "Connect" }: ConnectB
     <Pressable
       onPress={onPress}
       disabled={disabled}
+      android_ripple={{ color: "rgba(255,255,255,0.18)" }}
       style={({ pressed }) => [
         styles.connectPressable,
         pressed && styles.pressed,
@@ -113,7 +114,9 @@ export function ConnectButton({ onPress, disabled, label = "Connect" }: ConnectB
         style={styles.connectGradient}
       >
         <Ionicons name="link" size={18} color="#FFFFFF" />
-        <Text style={styles.connectText}>{label}</Text>
+        <Text style={styles.connectText} numberOfLines={1} includeFontPadding={false}>
+          {label}
+        </Text>
       </LinearGradient>
     </Pressable>
   );
@@ -283,20 +286,25 @@ function createUiStyles(colors: ThemeColors) {
       paddingVertical: 12,
     },
     connectPressable: {
+      alignSelf: "stretch" as const,
+      width: "100%" as const,
       borderRadius: radius.md,
       overflow: "hidden" as const,
     },
     connectGradient: {
+      width: "100%" as const,
       minHeight: 52,
       flexDirection: "row" as const,
       alignItems: "center" as const,
       justifyContent: "center" as const,
       gap: 8,
+      paddingHorizontal: 16,
     },
     connectText: {
       color: "#FFFFFF",
       fontSize: 16,
       fontWeight: "800" as const,
+      backgroundColor: "transparent",
     },
     orRow: {
       flexDirection: "row" as const,

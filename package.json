@@ -1,6 +1,6 @@
 {
   "name": "filedrop-mobile",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "index.ts",
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
@@ -37,7 +37,9 @@
     "clearExpoCache": "npx expo start --clear",
     "android:apk": "expo run:android --variant release",
     "android:apk:gradle": "cd android && gradlew.bat assembleRelease && cd ..",
-    "android:debug-apk": "cd android && gradlew.bat app:assembleDebug && cd .."
+    "android:aab": "cd android && gradlew.bat bundleRelease && cd ..",
+    "android:debug-apk": "cd android && gradlew.bat app:assembleDebug && cd ..",
+    "prebuild:android": "cd android && gradlew.bat --stop && cd .. && npx expo prebuild --platform android"
   },
   "private": true
 }

@@ -113,11 +113,15 @@ const REQUEST_TIMEOUT_MS = 30000;
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 2000;
 
-const REQUEST_HEADERS: HeadersInit = {
+const REQUEST_HEADERS: Record<string, string> = {
   Accept: "application/json, text/html;q=0.9, */*;q=0.8",
   "User-Agent":
     "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 Chrome/122.0.0.0 Mobile Safari/537.36 FiloraMobile",
 };
+
+/** Desktop reads x-filora-auth. Older builds used x-filedrop-auth. */
+export const SHARE_AUTH_HEADER = "X-Filora-Auth";
+const SHARE_AUTH_HEADER_LEGACY = "X-FileDrop-Auth";
 
 export function isPrivateHost(host: string): boolean {
   const hostname = host.replace(/^\[|\]$/g, "").toLowerCase();
@@ -294,11 +298,15 @@ export function parseLocalInputs(
   };
 }
 
-function authHeaders(authToken?: string | null): HeadersInit {
+export function authHeaders(authToken?: string | null): Record<string, string> {
   if (!authToken) {
     return { ...REQUEST_HEADERS };
   }
-  return { ...REQUEST_HEADERS, "X-FileDrop-Auth": authToken };
+  return {
+    ...REQUEST_HEADERS,
+    [SHARE_AUTH_HEADER]: authToken,
+    [SHARE_AUTH_HEADER_LEGACY]: authToken,
+  };
 }
 
 async function requestOnce(
@@ -485,16 +493,19 @@ export async function fetchFiles(
       const response = await request(url, { headers: authHeaders(authToken) });
       const body = await readBody(response);
 
-      if (
-        response.status === 401 ||
-        body.json?.password_required === true ||
-        (body.html && htmlNeedsPassword(body.html))
-      ) {
+      if (response.status === 401) {
         throw new Error("PASSWORD_REQUIRED");
       }
 
-      if (body.json?.files) {
+      if (Array.isArray(body.json?.files)) {
+        if (body.json.password_required === true && body.json.files.length === 0) {
+          throw new Error("PASSWORD_REQUIRED");
+        }
         return body.json.files;
+      }
+
+      if (body.json?.password_required === true) {
+        throw new Error("PASSWORD_REQUIRED");
       }
 
       if (body.html) {
@@ -522,6 +533,11 @@ export async function unlockSession(
   connection: ShareConnection,
   password: string,
 ): Promise<string | null> {
+  const cleaned = password.trim();
+  if (!cleaned) {
+    throw new Error("Enter the access password from Filora on your PC.");
+  }
+
   try {
     const jsonResponse = await request(`${connection.baseUrl}/api/s/${connection.token}/unlock`, {
       method: "POST",
@@ -529,13 +545,13 @@ export async function unlockSession(
         ...REQUEST_HEADERS,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ password }),
+      body: JSON.stringify({ password: cleaned }),
     });
     const jsonBody = await readBody(jsonResponse);
     if (jsonResponse.status === 401) {
       throw new Error("Wrong password.");
     }
-    if (jsonBody.json?.ok) {
+    if (jsonBody.json?.ok || jsonBody.json?.auth_token) {
       return jsonBody.json.auth_token ?? null;
     }
   } catch (error) {
@@ -544,7 +560,7 @@ export async function unlockSession(
     }
   }
 
-  const form = new URLSearchParams({ password });
+  const form = new URLSearchParams({ password: cleaned });
   const response = await request(`${connection.baseUrl}/s/${connection.token}/unlock`, {
     method: "POST",
     headers: {

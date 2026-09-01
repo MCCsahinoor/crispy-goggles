@@ -287,7 +287,9 @@ export default function SendPanel({ onToast }: SendPanelProps) {
           <Text style={styles.doneText}>
             {files.length} file{files.length === 1 ? "" : "s"} uploaded successfully.
           </Text>
-          <ConnectButton onPress={reset} label="Send more files" />
+          <View style={styles.doneButtonWrap}>
+            <ConnectButton onPress={reset} label="Send more files" />
+          </View>
         </View>
       )}
     </View>
@@ -455,6 +457,11 @@ function createStyles(colors: ThemeColors) {
       fontSize: 14,
       textAlign: "center",
       marginBottom: 8,
+    },
+    doneButtonWrap: {
+      alignSelf: "stretch",
+      width: "100%",
+      marginTop: 4,
     },
     pressed: {
       opacity: 0.82,
