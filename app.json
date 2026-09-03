@@ -2,7 +2,7 @@
   "expo": {
     "name": "Filora",
     "slug": "filora",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -14,7 +14,7 @@
       }
     },
     "android": {
-      "versionCode": 2,
+      "versionCode": 3,
       "adaptiveIcon": {
         "backgroundColor": "#0084FF",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -77,7 +77,24 @@
           "iosAppId": "ca-app-pub-3940256099942544~1458002511"
         }
       ],
-      "expo-font"
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#F1F5F9",
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200,
+          "dark": {
+            "backgroundColor": "#07080D",
+            "image": "./assets/splash-icon.png"
+          },
+          "android": {
+            "backgroundColor": "#07080D",
+            "image": "./assets/splash-icon.png",
+            "imageWidth": 200
+          }
+        }
+      ]
     ]
   }
 }

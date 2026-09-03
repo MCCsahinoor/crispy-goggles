@@ -25,10 +25,9 @@ import {
   Raleway_700Bold,
   useFonts,
 } from "@expo-google-fonts/raleway";
-import { ActivityIndicator, View } from "react-native";
+import * as SplashScreen from "expo-splash-screen";
+import { useEffect } from "react";
 import type { ReactNode } from "react";
-
-import { darkColors } from "../theme";
 
 export function FontProvider({ children }: { children: ReactNode }) {
   const [loaded] = useFonts({
@@ -56,19 +55,14 @@ export function FontProvider({ children }: { children: ReactNode }) {
     Poppins_900Black_Italic,
   });
 
+  useEffect(() => {
+    if (loaded) {
+      SplashScreen.hide();
+    }
+  }, [loaded]);
+
   if (!loaded) {
-    return (
-      <View
-        style={{
-          flex: 1,
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: darkColors.bg,
-        }}
-      >
-        <ActivityIndicator color={darkColors.blueSoft} />
-      </View>
-    );
+    return null;
   }
 
   return children;

@@ -1,6 +1,6 @@
 {
   "name": "filedrop-mobile",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "index.ts",
   "dependencies": {
     "@expo-google-fonts/poppins": "^0.4.1",
@@ -18,6 +18,7 @@
     "expo-linear-gradient": "~57.0.1",
     "expo-location": "~57.0.14",
     "expo-sharing": "~57.0.13",
+    "expo-splash-screen": "~57.0.8",
     "expo-status-bar": "~57.0.1",
     "react": "19.2.3",
     "react-native": "0.86.2",
@@ -41,7 +42,8 @@
     "clearExpoCache": "npx expo start --clear",
     "android:apk": "expo run:android --variant release",
     "android:apk:gradle": "cd android && gradlew.bat assembleRelease && cd ..",
-    "android:aab": "cd android && gradlew.bat bundleRelease && cd .. && node scripts/copy-release-mapping.js",
+    "version:bump": "node scripts/bump-version.js",
+    "android:aab": "node scripts/bump-version.js && cd android && gradlew.bat bundleRelease && cd .. && node scripts/copy-release-mapping.js",
     "android:debug-apk": "cd android && gradlew.bat app:assembleDebug && cd ..",
     "prebuild:android": "cd android && gradlew.bat --stop && cd .. && npx expo prebuild --platform android"
   },
