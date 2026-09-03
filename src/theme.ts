@@ -17,6 +17,65 @@ import {
   type ViewStyle,
 } from "react-native";
 
+export const fontFamily = {
+  bodyRegular: "Raleway_400Regular",
+  bodyMedium: "Raleway_500Medium",
+  bodySemiBold: "Raleway_600SemiBold",
+  bodyBold: "Raleway_700Bold",
+} as const;
+
+const poppinsFamily = {
+  100: "Poppins_100Thin",
+  200: "Poppins_200ExtraLight",
+  300: "Poppins_300Light",
+  400: "Poppins_400Regular",
+  500: "Poppins_500Medium",
+  600: "Poppins_600SemiBold",
+  700: "Poppins_700Bold",
+  800: "Poppins_800ExtraBold",
+  900: "Poppins_900Black",
+} as const;
+
+const poppinsItalicFamily = {
+  100: "Poppins_100Thin_Italic",
+  200: "Poppins_200ExtraLight_Italic",
+  300: "Poppins_300Light_Italic",
+  400: "Poppins_400Regular_Italic",
+  500: "Poppins_500Medium_Italic",
+  600: "Poppins_600SemiBold_Italic",
+  700: "Poppins_700Bold_Italic",
+  800: "Poppins_800ExtraBold_Italic",
+  900: "Poppins_900Black_Italic",
+} as const;
+
+export type BodyFontWeight = 400 | 500 | 600 | 700;
+
+/** Raleway for paragraph and UI copy. Omit on header/title styles. */
+export function para(weight: BodyFontWeight = 400): Pick<TextStyle, "fontFamily"> {
+  switch (weight) {
+    case 700:
+      return { fontFamily: fontFamily.bodyBold };
+    case 600:
+      return { fontFamily: fontFamily.bodySemiBold };
+    case 500:
+      return { fontFamily: fontFamily.bodyMedium };
+    default:
+      return { fontFamily: fontFamily.bodyRegular };
+  }
+}
+
+export type HeadingFontWeight = 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900;
+
+/** Poppins for titles and section headers. Pass `italic: true` for italic variants. */
+export function heading(
+  weight: HeadingFontWeight = 700,
+  italic = false,
+): Pick<TextStyle, "fontFamily"> {
+  return {
+    fontFamily: italic ? poppinsItalicFamily[weight] : poppinsFamily[weight],
+  };
+}
+
 export type ThemeMode = "system" | "light" | "dark";
 export type ColorScheme = "light" | "dark";
 

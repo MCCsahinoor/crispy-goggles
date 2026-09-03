@@ -7,7 +7,7 @@ import {
 } from "./ui";
 import { StyleSheet, Text, View } from "react-native";
 
-import { useThemedStyles, type ThemeColors } from "../theme";
+import { heading, para, useThemedStyles, type ThemeColors } from "../theme";
 
 type GlobalConnectPanelProps = {
   shareUrl: string;
@@ -76,12 +76,13 @@ function createStyles(colors: ThemeColors) {
     minWidth: 0,
   },
   heroTitle: {
+    ...heading(600),
     color: colors.text,
-    fontSize: 20,
-    fontWeight: "800",
-    letterSpacing: -0.3,
+    fontSize: 16,
+    lineHeight: 23,
   },
   heroText: {
+    ...para(500),
     color: colors.textMuted,
     fontSize: 13,
     lineHeight: 18,

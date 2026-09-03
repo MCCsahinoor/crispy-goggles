@@ -10,7 +10,7 @@ import {
 } from "react-native";
 
 import { ConnectionMode, SharedFile } from "../lib/filedrop";
-import { radius, useTheme, useThemedStyles, type ThemeColors } from "../theme";
+import { heading, para, radius, useTheme, useThemedStyles, type ThemeColors } from "../theme";
 
 type FilesPanelProps = {
   connectionMode: ConnectionMode;
@@ -102,9 +102,7 @@ export default function FilesPanel({
             onPress={openShareUrl}
           >
             <Ionicons name="link-outline" size={15} color={colors.blueSoft} />
-            <Text style={styles.shareUrlText} numberOfLines={1}>
-              {shareUrl}
-            </Text>
+            <Text style={styles.shareUrlText} numberOfLines={1}> {shareUrl} </Text>
             <Ionicons name="open-outline" size={15} color={colors.blueSoft} />
           </Pressable>
         )}
@@ -206,9 +204,10 @@ function createStyles(colors: ThemeColors) {
     flex: 1,
   },
   filesTitle: {
-    fontSize: 17,
-    fontWeight: "800",
+    ...heading(600),
     color: colors.text,
+    fontSize: 16,
+    lineHeight: 23,
   },
   modeBadge: {
     backgroundColor: "rgba(59,130,246,0.12)",
@@ -219,8 +218,9 @@ function createStyles(colors: ThemeColors) {
     borderColor: "rgba(59,130,246,0.35)",
   },
   modeBadgeText: {
-    fontSize: 11,
-    fontWeight: "700",
+    ...para(700),
+    fontSize: 10,
+    lineHeight: 16,
     color: colors.blueSoft,
   },
   iconButton: {
@@ -232,9 +232,10 @@ function createStyles(colors: ThemeColors) {
     borderColor: colors.border,
   },
   iconButtonText: {
+    ...para(700),
     color: colors.blueSoft,
-    fontWeight: "700",
-    fontSize: 13,
+    fontSize: 12,
+    lineHeight: 16,
   },
   shareUrlRow: {
     flexDirection: "row",
@@ -249,13 +250,15 @@ function createStyles(colors: ThemeColors) {
     marginBottom: 8,
   },
   shareUrlText: {
+    ...para(600),
     flex: 1,
     color: colors.blueSoft,
-    fontSize: 12,
-    fontWeight: "600",
+    fontSize: 10,
   },
   filesCount: {
-    fontSize: 12,
+    ...para(500),
+    fontSize: 10,
+    lineHeight: 14,
     color: colors.textMuted,
     marginBottom: 10,
   },
@@ -292,14 +295,16 @@ function createStyles(colors: ThemeColors) {
     flex: 1,
   },
   fileName: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: colors.text,
-    lineHeight: 19,
+    ...para(600),
+    fontSize: 11,
+    lineHeight: 16,
+    color: colors.text, 
   },
   fileSize: {
+    ...para(500),
     marginTop: 2,
-    fontSize: 12,
+    fontSize: 10,
+    lineHeight: 14,
     color: colors.textMuted,
   },
   downloadPill: {
@@ -311,9 +316,10 @@ function createStyles(colors: ThemeColors) {
     borderColor: "rgba(59,130,246,0.35)",
   },
   downloadPillText: {
+    ...para(700),
     color: colors.blueSoft,
-    fontWeight: "700",
     fontSize: 12,
+    lineHeight: 16,
   },
   filesFooter: {
     borderTopWidth: 1,
@@ -330,9 +336,10 @@ function createStyles(colors: ThemeColors) {
     alignItems: "center",
   },
   disconnectButtonText: {
+    ...para(700),
     color: colors.danger,
-    fontWeight: "700",
     fontSize: 14,
+    lineHeight: 18,
   },
   emptyList: {
     flexGrow: 1,
@@ -344,16 +351,18 @@ function createStyles(colors: ThemeColors) {
     paddingHorizontal: 16,
   },
   emptyTitle: {
-    fontSize: 15,
-    fontWeight: "700",
+    ...heading(600),
+    fontSize: 16,
+    lineHeight: 23,
     color: colors.text,
     marginBottom: 4,
   },
   emptyText: {
+    ...para(500),
     textAlign: "center",
     color: colors.textMuted,
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: 10,
+    lineHeight: 14, 
   },
   statusBanner: {
     backgroundColor: "rgba(59,130,246,0.12)",
@@ -368,10 +377,10 @@ function createStyles(colors: ThemeColors) {
     borderColor: colors.warningBorder,
   },
   statusBannerText: {
+    ...para(500),
     color: colors.blueSoft,
     fontSize: 13,
     lineHeight: 18,
-    fontWeight: "500",
   },
   statusBannerWarningText: {
     color: colors.warning,

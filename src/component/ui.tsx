@@ -2,7 +2,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
-import { gradients, radius, useTheme, useThemedStyles, type ThemeColors } from "../theme";
+import { gradients, heading, para, radius, useTheme, useThemedStyles, type ThemeColors } from "../theme";
 
 type ScanActionCardProps = {
   icon: keyof typeof Ionicons.glyphMap;
@@ -114,7 +114,7 @@ export function ConnectButton({ onPress, disabled, label = "Connect" }: ConnectB
         style={styles.connectGradient}
       >
         <Ionicons name="link" size={18} color="#FFFFFF" />
-        <Text style={styles.connectText} numberOfLines={1} includeFontPadding={false}>
+        <Text style={styles.connectText} numberOfLines={1}>
           {label}
         </Text>
       </LinearGradient>
@@ -229,11 +229,13 @@ function createUiStyles(colors: ThemeColors) {
       gap: 2,
     },
     scanTitle: {
+      ...heading(600),
       color: colors.text,
-      fontSize: 15,
-      fontWeight: "700" as const,
+      fontSize: 14,
+      lineHeight: 20,
     },
     scanSubtitle: {
+      ...para(500),
       color: colors.textMuted,
       fontSize: 12,
       lineHeight: 16,
@@ -247,9 +249,9 @@ function createUiStyles(colors: ThemeColors) {
       justifyContent: "space-between" as const,
     },
     sectionLabel: {
+      ...heading(),
       color: colors.textDim,
       fontSize: 11,
-      fontWeight: "700" as const,
       letterSpacing: 1.1,
       textTransform: "uppercase" as const,
     },
@@ -264,9 +266,10 @@ function createUiStyles(colors: ThemeColors) {
       paddingVertical: 5,
     },
     pasteText: {
+      ...para(700),
       color: colors.purpleSoft,
-      fontSize: 12,
-      fontWeight: "700" as const,
+      fontSize: 10,
+      lineHeight: 14,
     },
     inputWrap: {
       flexDirection: "row" as const,
@@ -280,6 +283,7 @@ function createUiStyles(colors: ThemeColors) {
       minHeight: 50,
     },
     input: {
+      ...para(),
       flex: 1,
       color: colors.text,
       fontSize: 14,
@@ -301,9 +305,9 @@ function createUiStyles(colors: ThemeColors) {
       paddingHorizontal: 16,
     },
     connectText: {
+      ...para(700),
       color: "#FFFFFF",
       fontSize: 16,
-      fontWeight: "800" as const,
       backgroundColor: "transparent",
     },
     orRow: {
@@ -318,9 +322,9 @@ function createUiStyles(colors: ThemeColors) {
       backgroundColor: colors.borderStrong,
     },
     orText: {
+      ...para(700),
       color: colors.textDim,
       fontSize: 12,
-      fontWeight: "700" as const,
       letterSpacing: 1,
     },
     divider: {

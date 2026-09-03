@@ -25,10 +25,12 @@ import {
 import WifiManager from "react-native-wifi-reborn";
 
 import AdBanner from "./src/component/AdBanner";
+import { FontProvider } from "./src/component/FontProvider";
 import FilesPanel from "./src/component/FilesPanel";
 import GlobalConnectPanel from "./src/component/GlobalConnectPanel";
 import HistoryPanel, { HistoryEntry } from "./src/component/HistoryPanel";
 import HowToUseModal from "./src/component/HowToUseModal";
+import LocationRequiredModal from "./src/component/LocationRequiredModal";
 import LocalConnectPanel from "./src/component/LocalConnectPanel";
 import SendPanel from "./src/component/SendPanel";
 import SettingsPanel from "./src/component/SettingsPanel";
@@ -51,10 +53,16 @@ import {
 import { useInAppUpdates } from "./src/hooks/useInAppUpdates";
 import { useMobileAds } from "./src/hooks/useMobileAds";
 import { useAppInterstitial } from "./src/hooks/useAppInterstitial";
-import { requestLocationPermission } from "./src/lib/permissions";
+import {
+  enableLocationServices,
+  getLocationWifiReadiness,
+  requestLocationPermission,
+} from "./src/lib/permissions";
 import { saveFileToAppFolder } from "./src/lib/saveDownload";
 import {
   gradients,
+  heading,
+  para,
   radius,
   ThemeProvider,
   useTheme,
@@ -70,9 +78,11 @@ const TOAST_DURATION_MS = 3000;
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <AppShell />
-    </ThemeProvider>
+    <FontProvider>
+      <ThemeProvider>
+        <AppShell />
+      </ThemeProvider>
+    </FontProvider>
   );
 }
 
@@ -101,6 +111,9 @@ function AppShell() {
   const [scanning, setScanning] = useState(false);
   const [scanPurpose, setScanPurpose] = useState<ScanPurpose>("share");
   const scanPurposeRef = useRef<ScanPurpose>("share");
+  const pendingLocationActionRef = useRef<(() => void | Promise<void>) | null>(null);
+  const [locationModalOpen, setLocationModalOpen] = useState(false);
+  const [enablingLocation, setEnablingLocation] = useState(false);
   const [permission, requestPermission] = useCameraPermissions();
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -333,28 +346,75 @@ function AppShell() {
     [connectWithUrl, showToast],
   );
 
+  const runAfterLocationReady = useCallback(async (action: () => void | Promise<void>) => {
+    if (Platform.OS !== "android") {
+      await action();
+      return;
+    }
+    const readiness = await getLocationWifiReadiness();
+    if (readiness === "ready") {
+      await action();
+      return;
+    }
+    pendingLocationActionRef.current = action;
+    setLocationModalOpen(true);
+  }, []);
+
+  const handleEnableLocation = useCallback(async () => {
+    setEnablingLocation(true);
+    try {
+      const permissionGranted = await requestLocationPermission();
+      if (!permissionGranted) {
+        showToast("Allow location for Filora in App permissions, then try again.");
+        return;
+      }
+      const enabled = await enableLocationServices();
+      if (!enabled) {
+        showToast("Location is still off. Turn it on to join Wi-Fi automatically.");
+        return;
+      }
+      setLocationModalOpen(false);
+      const action = pendingLocationActionRef.current;
+      pendingLocationActionRef.current = null;
+      if (action) {
+        await action();
+      }
+    } finally {
+      setEnablingLocation(false);
+    }
+  }, [showToast]);
+
+  const handleConnectManually = useCallback(() => {
+    setLocationModalOpen(false);
+    pendingLocationActionRef.current = null;
+    if (Platform.OS === "android") {
+      void Linking.sendIntent("android.settings.WIFI_SETTINGS");
+    }
+  }, []);
+
   const startScanning = useCallback(
     async (purpose: ScanPurpose) => {
+      const beginScan = async () => {
+        if (!permission?.granted) {
+          const result = await requestPermission();
+          if (!result.granted) {
+            showToast("Camera permission is required to scan QR codes.");
+            return;
+          }
+        }
+        scanPurposeRef.current = purpose;
+        setScanPurpose(purpose);
+        setScanning(true);
+        clearToast();
+      };
+
       if (purpose === "wifi") {
-        const locationGranted = await requestLocationPermission();
-        if (!locationGranted) {
-          showToast("Location permission required to join PC Wi-Fi. Enable it in App info.");
-          return;
-        }
+        await runAfterLocationReady(beginScan);
+        return;
       }
-      if (!permission?.granted) {
-        const result = await requestPermission();
-        if (!result.granted) {
-          showToast("Camera permission is required to scan QR codes.");
-          return;
-        }
-      }
-      scanPurposeRef.current = purpose;
-      setScanPurpose(purpose);
-      setScanning(true);
-      clearToast();
+      await beginScan();
     },
-    [clearToast, permission, requestPermission, showToast],
+    [clearToast, permission, requestPermission, runAfterLocationReady, showToast],
   );
 
   const handlePasteShareUrl = useCallback(async () => {
@@ -368,7 +428,7 @@ function AppShell() {
     showToast("Nothing to paste from clipboard.");
   }, [clearToast, showToast]);
 
-  const connectToWifiNetwork = useCallback(async () => {
+  const performWifiConnect = useCallback(async () => {
     if (!wifiDetails) {
       return;
     }
@@ -379,12 +439,6 @@ function AppShell() {
     }
 
     try {
-      const locationGranted = await requestLocationPermission();
-      if (!locationGranted) {
-        showToast("Location permission required to connect to WiFi. Enable it in App info.");
-        return;
-      }
-
       const isEnabled = await WifiManager.isEnabled();
       if (!isEnabled) {
         showToast("Enabling WiFi...");
@@ -416,12 +470,24 @@ function AppShell() {
       }
     } catch (error) {
       const msg = error instanceof Error ? error.message : "Connection failed";
+      if (msg.toLowerCase().includes("location service")) {
+        pendingLocationActionRef.current = performWifiConnect;
+        setLocationModalOpen(true);
+        return;
+      }
       showToast(`WiFi error: ${msg}. Opening settings...`);
       setTimeout(() => {
         Linking.sendIntent("android.settings.WIFI_SETTINGS");
       }, 1500);
     }
   }, [showToast, wifiDetails]);
+
+  const connectToWifiNetwork = useCallback(async () => {
+    if (!wifiDetails) {
+      return;
+    }
+    await runAfterLocationReady(performWifiConnect);
+  }, [performWifiConnect, runAfterLocationReady, wifiDetails]);
 
   const scanTitle =
     scanPurpose === "wifi"
@@ -666,6 +732,15 @@ function AppShell() {
         </SafeAreaView>
       )}
 
+      <LocationRequiredModal
+        visible={locationModalOpen}
+        enabling={enablingLocation}
+        onEnable={() => {
+          void handleEnableLocation();
+        }}
+        onConnectManually={handleConnectManually}
+      />
+
       <HowToUseModal visible={helpOpen} onClose={() => setHelpOpen(false)} />
 
       <Modal
@@ -731,14 +806,15 @@ function createStyles(colors: ThemeColors) {
       flex: 1,
     },
     title: {
+      ...heading(),
       fontSize: 18,
-      fontWeight: "800",
-      color: colors.text,
-      letterSpacing: -0.3,
+      color: colors.text, 
+      lineHeight: 23,
     },
     subtitle: {
-      marginTop: 2,
-      fontSize: 12,
+      ...para(500), 
+      fontSize: 10,
+      lineHeight: 14,
       color: colors.textMuted,
     },
     connectedBadge: {
@@ -759,9 +835,10 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.success,
     },
     connectedBadgeText: {
+      ...para(700),
       fontSize: 12,
-      fontWeight: "700",
       color: colors.success,
+      lineHeight: 16,
     },
     modeRow: {
       flexDirection: "row",
@@ -796,9 +873,10 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: "rgba(168,85,247,0.08)",
     },
     modeTabText: {
+      ...para(700),
       color: colors.textDim,
-      fontWeight: "700",
       fontSize: 13,
+      lineHeight: 18,
     },
     modeTabTextGlobal: {
       color: colors.blueSoft,
@@ -815,13 +893,14 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.border,
     },
     label: {
+      ...heading(),
       fontSize: 12,
-      fontWeight: "700",
       color: colors.textMuted,
       textTransform: "uppercase",
       letterSpacing: 0.8,
     },
     input: {
+      ...para(),
       borderWidth: 1,
       borderColor: colors.inputBorder,
       borderRadius: radius.md,
@@ -841,18 +920,18 @@ function createStyles(colors: ThemeColors) {
       justifyContent: "center",
     },
     unlockText: {
+      ...para(700),
       color: "#fff",
       fontSize: 15,
-      fontWeight: "800",
     },
     linkButton: {
       alignItems: "center",
       paddingVertical: 4,
     },
     linkButtonText: {
+      ...para(600),
       color: colors.blueSoft,
       fontSize: 14,
-      fontWeight: "600",
     },
     statusBanner: {
       flexDirection: "row",
@@ -871,11 +950,11 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.warningBorder,
     },
     statusBannerText: {
+      ...para(500),
       flex: 1,
       color: colors.blueSoft,
       fontSize: 13,
       lineHeight: 18,
-      fontWeight: "500",
     },
     statusBannerWarningText: {
       color: colors.warning,
@@ -898,9 +977,9 @@ function createStyles(colors: ThemeColors) {
       paddingVertical: 4,
     },
     bottomItemText: {
+      ...para(700),
       color: colors.textMuted,
       fontSize: 12,
-      fontWeight: "700",
     },
     bottomItemTextActive: {
       color: colors.text,
@@ -929,8 +1008,8 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.border,
     },
     loaderText: {
+      ...para(600),
       fontSize: 16,
-      fontWeight: "600",
       color: colors.text,
       textAlign: "center",
     },
@@ -955,9 +1034,9 @@ function createStyles(colors: ThemeColors) {
       paddingBottom: 16,
     },
     scanTitle: {
+      ...heading(),
       color: "#fff",
       fontSize: 18,
-      fontWeight: "700",
       textAlign: "center",
       backgroundColor: "rgba(7, 8, 13, 0.7)",
       paddingHorizontal: 16,
@@ -974,9 +1053,9 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: colors.card,
     },
     scanCancelText: {
+      ...para(700),
       color: colors.text,
       fontSize: 15,
-      fontWeight: "700",
     },
   });
 }

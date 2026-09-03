@@ -15,7 +15,7 @@ import {
   FILORA_WEBSITE_URL,
   FILORA_WINDOWS_DOWNLOAD_URL,
 } from "../lib/links";
-import { radius, useTheme, useThemedStyles, type ThemeColors } from "../theme";
+import { heading, para, radius, useTheme, useThemedStyles, type ThemeColors } from "../theme";
 
 type HowToUseModalProps = {
   visible: boolean;
@@ -201,14 +201,16 @@ function createStyles(colors: ThemeColors) {
       elevation: 8,
     },
     title: {
+      ...heading(600),
       color: colors.text,
-      fontSize: 18,
-      fontWeight: "800" as const,
+      fontSize: 16,
+      lineHeight: 23,
     },
     intro: {
+      ...para(500),
       color: colors.textMuted,
-      fontSize: 14,
-      lineHeight: 20,
+      fontSize: 13,
+      lineHeight: 18,
     },
     scroll: {
       flexGrow: 0,
@@ -244,14 +246,16 @@ function createStyles(colors: ThemeColors) {
       minWidth: 0,
     },
     stepTitle: {
+      ...heading(600),
       color: colors.text,
-      fontSize: 15,
-      fontWeight: "700" as const,
+      fontSize: 14,
+      lineHeight: 23,
     },
     stepBody: {
+      ...para(500),
       color: colors.textMuted,
       fontSize: 13,
-      lineHeight: 19,
+      lineHeight: 18,
     },
     bulletRow: {
       flexDirection: "row" as const,
@@ -266,15 +270,16 @@ function createStyles(colors: ThemeColors) {
       marginTop: 7,
     },
     bulletText: {
+      ...para(500),  
       flex: 1,
       color: colors.textMuted,
       fontSize: 13,
-      lineHeight: 19,
+      lineHeight: 19, 
     },
     linksHeading: {
+      ...heading(),
       color: colors.blueSoft,
       fontSize: 13,
-      fontWeight: "800" as const,
       marginTop: 4,
     },
     linkRow: {
@@ -302,13 +307,15 @@ function createStyles(colors: ThemeColors) {
       gap: 2,
     },
     linkTitle: {
+      ...heading(600),
       color: colors.text,
-      fontSize: 14,
-      fontWeight: "700" as const,
+      fontSize: 13,
+      lineHeight: 23,
     },
     linkSubtitle: {
+      ...para(500),
       color: colors.textMuted,
-      fontSize: 12,
+      fontSize: 11,
       lineHeight: 16,
     },
     close: {
@@ -321,8 +328,8 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.border,
     },
     closeText: {
+      ...para(700),
       color: colors.text,
-      fontWeight: "700" as const,
     },
     pressed: {
       opacity: 0.75,

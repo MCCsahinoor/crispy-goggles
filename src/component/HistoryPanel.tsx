@@ -2,7 +2,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { ConnectionMode } from "../lib/filedrop";
-import { radius, useTheme, useThemedStyles, type ThemeColors } from "../theme";
+import { heading, para, radius, useTheme, useThemedStyles, type ThemeColors } from "../theme";
 
 export type HistoryEntry = {
   url: string;
@@ -100,11 +100,12 @@ function createStyles(colors: ThemeColors) {
     marginBottom: 4,
   },
   emptyTitle: {
+    ...heading(),
     color: colors.text,
     fontSize: 18,
-    fontWeight: "800",
   },
   emptyText: {
+    ...para(),
     color: colors.textMuted,
     fontSize: 14,
     lineHeight: 20,
@@ -139,11 +140,12 @@ function createStyles(colors: ThemeColors) {
     minWidth: 0,
   },
   rowTitle: {
+    ...para(700),
     color: colors.text,
     fontSize: 13,
-    fontWeight: "700",
   },
   rowMeta: {
+    ...para(),
     color: colors.textMuted,
     fontSize: 12,
   },

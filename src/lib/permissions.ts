@@ -1,4 +1,5 @@
 import { Camera } from "expo-camera";
+import * as Location from "expo-location";
 import {
   Alert,
   AppState,
@@ -105,6 +106,48 @@ export async function openAppInfo() {
 
 export async function openAppSettings() {
   await openAppInfo();
+}
+
+export async function isLocationServicesEnabled(): Promise<boolean> {
+  if (Platform.OS !== "android") {
+    return true;
+  }
+  try {
+    return await Location.hasServicesEnabledAsync();
+  } catch {
+    return false;
+  }
+}
+
+export async function enableLocationServices(): Promise<boolean> {
+  if (Platform.OS !== "android") {
+    return true;
+  }
+
+  try {
+    if (await Location.hasServicesEnabledAsync()) {
+      return true;
+    }
+    await Location.enableNetworkProviderAsync();
+    return await Location.hasServicesEnabledAsync();
+  } catch {
+    return false;
+  }
+}
+
+export type LocationWifiReadiness = "ready" | "permission_denied" | "services_off";
+
+export async function getLocationWifiReadiness(): Promise<LocationWifiReadiness> {
+  if (Platform.OS !== "android") {
+    return "ready";
+  }
+  if (!(await getLocationGranted())) {
+    return "permission_denied";
+  }
+  if (!(await isLocationServicesEnabled())) {
+    return "services_off";
+  }
+  return "ready";
 }
 
 export async function requestLocationPermission(): Promise<boolean> {

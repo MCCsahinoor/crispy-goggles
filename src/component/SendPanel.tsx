@@ -21,7 +21,7 @@ import {
   uploadFilesToPc,
   waitForPcReceive,
 } from "../lib/sendToPc";
-import { gradients, radius, useTheme, useThemedStyles, type ThemeColors } from "../theme";
+import { gradients, heading, para, radius, useTheme, useThemedStyles, type ThemeColors } from "../theme";
 import { ConnectButton, OrDivider, StepLabel } from "./ui";
 
 type SendPanelProps = {
@@ -169,8 +169,7 @@ export default function SendPanel({ onToast }: SendPanelProps) {
         <View style={styles.heroCopy}>
           <Text style={styles.heroTitle}>Send to PC</Text>
           <Text style={styles.heroText}>
-            Select files on your phone, generate a QR code, then scan it from Filora Desktop to
-            upload.
+            Select files on your phone, generate a QR code, then scan it from Filora Desktop to upload.
           </Text>
         </View>
       </View>
@@ -325,12 +324,13 @@ function createStyles(colors: ThemeColors) {
       minWidth: 0,
     },
     heroTitle: {
+      ...heading(600),
       color: colors.text,
-      fontSize: 20,
-      fontWeight: "800",
-      letterSpacing: -0.3,
+      fontSize: 16,
+      lineHeight: 23,
     },
     heroText: {
+      ...para(500),
       color: colors.textMuted,
       fontSize: 13,
       lineHeight: 18,
@@ -343,8 +343,8 @@ function createStyles(colors: ThemeColors) {
       borderWidth: 1,
       borderColor: colors.border,
       borderRadius: radius.lg,
-      paddingHorizontal: 14,
-      paddingVertical: 16,
+      paddingHorizontal: 10,
+      paddingVertical: 10,
     },
     pickIconWrap: {
       width: 44,
@@ -359,13 +359,16 @@ function createStyles(colors: ThemeColors) {
       gap: 2,
     },
     pickTitle: {
+      ...heading(600),
       color: colors.text,
-      fontSize: 15,
-      fontWeight: "700",
+      fontSize: 14,
+      lineHeight: 20,
     },
     pickSubtitle: {
+      ...para(500),
       color: colors.textMuted,
       fontSize: 12,
+      lineHeight: 16,
     },
     fileList: {
       maxHeight: 220,
@@ -392,11 +395,12 @@ function createStyles(colors: ThemeColors) {
       gap: 2,
     },
     fileName: {
+      ...para(600),
       color: colors.text,
       fontSize: 14,
-      fontWeight: "600",
     },
     fileSize: {
+      ...para(),
       color: colors.textMuted,
       fontSize: 12,
     },
@@ -405,9 +409,9 @@ function createStyles(colors: ThemeColors) {
       paddingVertical: 4,
     },
     linkButtonText: {
+      ...para(600),
       color: colors.blueSoft,
       fontSize: 14,
-      fontWeight: "600",
     },
     qrBlock: {
       gap: 12,
@@ -421,6 +425,7 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.border,
     },
     qrHint: {
+      ...para(),
       color: colors.textMuted,
       fontSize: 13,
       lineHeight: 18,
@@ -432,11 +437,12 @@ function createStyles(colors: ThemeColors) {
       gap: 8,
     },
     statusText: {
+      ...para(600),
       color: colors.text,
       fontSize: 13,
-      fontWeight: "600",
     },
     errorText: {
+      ...para(),
       color: colors.danger,
       fontSize: 13,
       textAlign: "center",
@@ -448,11 +454,12 @@ function createStyles(colors: ThemeColors) {
       paddingVertical: 12,
     },
     doneTitle: {
+      ...heading(),
       color: colors.text,
       fontSize: 20,
-      fontWeight: "800",
     },
     doneText: {
+      ...para(),
       color: colors.textMuted,
       fontSize: 14,
       textAlign: "center",

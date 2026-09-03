@@ -26,6 +26,8 @@ import {
   getDownloadFolderLabel,
 } from "../lib/saveDownload";
 import {
+  heading,
+  para,
   radius,
   THEME_MODE_LABELS,
   useTheme,
@@ -468,13 +470,14 @@ function createStyles(colors: ThemeColors) {
       gap: 2,
     },
     sectionTitle: {
+      ...heading(700),
       color: colors.blueSoft,
-      fontSize: 18,
-      fontWeight: "800" as const,
-      letterSpacing: 0.2,
-      marginBottom: 4,
+      fontSize: 16, 
+      lineHeight: 23,
+      marginBottom: 0,
     },
     sectionSubtitle: {
+      ...para(),
       color: colors.textMuted,
       fontSize: 13,
       lineHeight: 18,
@@ -492,9 +495,10 @@ function createStyles(colors: ThemeColors) {
       minWidth: 0,
     },
     rowTitle: {
+      ...heading(500),
       color: colors.text,
-      fontSize: 16,
-      fontWeight: "600" as const,
+      fontSize: 14,
+      lineHeight: 20,
     },
     iconLabel: {
       width: 22,
@@ -504,9 +508,10 @@ function createStyles(colors: ThemeColors) {
       fontWeight: "700" as const,
     },
     rowSubtitle: {
+      ...para(500),
       color: colors.textMuted,
-      fontSize: 13,
-      lineHeight: 18,
+      fontSize: 12,
+      lineHeight: 16,
     },
     busyRow: {
       flexDirection: "row" as const,
@@ -514,6 +519,7 @@ function createStyles(colors: ThemeColors) {
       gap: 8,
     },
     busyText: {
+      ...para(),
       color: colors.textMuted,
       fontSize: 13,
     },
@@ -532,15 +538,16 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.border,
     },
     modalTitle: {
+      ...heading(600),
       color: colors.text,
-      fontSize: 18,
-      fontWeight: "800" as const,
-      marginBottom: 8,
+      fontSize: 16,
+      lineHeight: 23,
     },
     modalBody: {
+      ...para(500),
       color: colors.textMuted,
-      fontSize: 14,
-      lineHeight: 20,
+      fontSize: 13,
+      lineHeight: 18,
     },
     readMore: {
       flexDirection: "row" as const,
@@ -551,9 +558,9 @@ function createStyles(colors: ThemeColors) {
       marginBottom: 4,
     },
     readMoreText: {
+      ...para(700),
       color: colors.blueSoft,
       fontSize: 14,
-      fontWeight: "700" as const,
     },
     modalClose: {
       marginTop: 8,
@@ -565,8 +572,8 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.border,
     },
     modalCloseText: {
+      ...para(700),
       color: colors.text,
-      fontWeight: "700" as const,
     },
     optionRow: {
       flexDirection: "row" as const,
@@ -575,10 +582,11 @@ function createStyles(colors: ThemeColors) {
       paddingVertical: 12,
     },
     optionText: {
+      ...para(600),
       flex: 1,
       color: colors.text,
-      fontSize: 16,
-      fontWeight: "600" as const,
+      fontSize: 12,
+      lineHeight: 16,
     },
     pressed: {
       opacity: 0.7,

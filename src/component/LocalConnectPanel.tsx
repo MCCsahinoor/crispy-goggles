@@ -4,7 +4,7 @@ import { AppState, Platform, Pressable, StyleSheet, Text, View } from "react-nat
 import WifiManager from "react-native-wifi-reborn";
 
 import { WifiCredentials } from "../lib/filedrop";
-import { radius, useTheme, useThemedStyles, type ThemeColors } from "../theme";
+import { heading, para, radius, useTheme, useThemedStyles, type ThemeColors } from "../theme";
 import {
   ConnectButton,
   OrDivider,
@@ -195,12 +195,13 @@ function createStyles(colors: ThemeColors) {
     minWidth: 0,
   },
   heroTitle: {
+    ...heading(600),
     color: colors.text,
-    fontSize: 20,
-    fontWeight: "800",
-    letterSpacing: -0.3,
+    fontSize: 16,
+    lineHeight: 23,
   },
   heroText: {
+    ...para(500),
     color: colors.textMuted,
     fontSize: 13,
     lineHeight: 18,
@@ -228,10 +229,10 @@ function createStyles(colors: ThemeColors) {
     borderColor: colors.successBorder,
   },
   wifiConnectedText: {
+    ...para(700),
     flex: 1,
     color: colors.success,
     fontSize: 13,
-    fontWeight: "700",
   },
   wifiDetailsRow: {
     flexDirection: "row",
@@ -253,9 +254,9 @@ function createStyles(colors: ThemeColors) {
     marginLeft: 8,
   },
   wifiLine: {
+    ...para(600),
     color: colors.text,
     fontSize: 13,
-    fontWeight: "600",
     flexShrink: 1,
   },
   errorBanner: {
@@ -267,19 +268,19 @@ function createStyles(colors: ThemeColors) {
     borderColor: colors.warningBorder,
   },
   errorText: {
+    ...para(500),
     color: colors.warning,
     fontSize: 13,
     lineHeight: 18,
-    fontWeight: "500",
   },
   linkButton: {
     alignItems: "center",
     paddingVertical: 4,
   },
   linkButtonText: {
+    ...para(700),
     color: colors.purpleSoft,
     fontSize: 14,
-    fontWeight: "700",
   },
   pressed: {
     opacity: 0.75,
