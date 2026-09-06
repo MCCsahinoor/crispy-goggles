@@ -56,8 +56,13 @@ export function FontProvider({ children }: { children: ReactNode }) {
   });
 
   useEffect(() => {
-    if (loaded) {
+    if (!loaded) {
+      return;
+    }
+    try {
       SplashScreen.hide();
+    } catch {
+      // Splash may already be gone on launch.
     }
   }, [loaded]);
 

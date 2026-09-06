@@ -7,9 +7,10 @@ import {
   Modal,
   Platform,
   Pressable,
-  Text,
   View,
 } from "react-native";
+
+import { Text } from "../lib/disableFontScaling";
 
 import {
   getRequiredPermissions,

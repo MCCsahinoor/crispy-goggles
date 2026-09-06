@@ -5,9 +5,10 @@ import {
   Linking,
   Pressable,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+
+import { Text } from "../lib/disableFontScaling";
 
 import { ConnectionMode, SharedFile } from "../lib/filedrop";
 import { heading, para, radius, useTheme, useThemedStyles, type ThemeColors } from "../theme";

@@ -1,6 +1,6 @@
 {
   "name": "filedrop-mobile",
-  "version": "1.0.2",
+  "version": "1.0.6",
   "main": "index.ts",
   "dependencies": {
     "@expo-google-fonts/poppins": "^0.4.1",
@@ -39,13 +39,14 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "lint": "expo lint",
+    "adb:uninstall": "adb uninstall com.madarlabs.filora",
     "clearExpoCache": "npx expo start --clear",
     "android:apk": "expo run:android --variant release",
     "android:apk:gradle": "cd android && gradlew.bat assembleRelease && cd ..",
     "version:bump": "node scripts/bump-version.js",
     "android:aab": "node scripts/bump-version.js && cd android && gradlew.bat bundleRelease && cd .. && node scripts/copy-release-mapping.js",
     "android:debug-apk": "cd android && gradlew.bat app:assembleDebug && cd ..",
-    "prebuild:android": "cd android && gradlew.bat --stop && cd .. && npx expo prebuild --platform android"
+    "prebuild:android": "node -e \"require('fs').rmSync('android/build',{recursive:true,force:true})\" && cd android && gradlew.bat --stop && cd .. && npx expo prebuild --platform android"
   },
   "private": true
 }

@@ -1,21 +1,26 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { LinearGradient } from "expo-linear-gradient";
+import { useCallback, useEffect, useState } from "react";
 import {
   Linking,
   Modal,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   useWindowDimensions,
   View,
 } from "react-native";
+
+import { Text } from "../lib/disableFontScaling";
 
 import {
   FILORA_PRIVACY_URL,
   FILORA_WEBSITE_URL,
   FILORA_WINDOWS_DOWNLOAD_URL,
 } from "../lib/links";
-import { heading, para, radius, useTheme, useThemedStyles, type ThemeColors } from "../theme";
+import { gradients, heading, para, radius, useTheme, useThemedStyles, type ThemeColors } from "../theme";
 
 type HowToUseModalProps = {
   visible: boolean;
@@ -76,10 +81,15 @@ const STEPS: Step[] = [
       "Pick one or more files on your phone.",
       "Show the QR code in this app.",
       "On the PC, open Filora Desktop → Receive from phone → scan this QR.",
+      "If the PC has no camera, tap Copy under the QR and paste the code in Filora Desktop.",
       "Phone and PC must be on the same Wi-Fi or the PC hotspot.",
     ],
   },
 ];
+
+const SCROLL_END_THRESHOLD = 24;
+const SCROLL_THUMB_MIN = 28;
+const SCROLL_TRACK_INSET = 4;
 
 const LINKS: { icon: keyof typeof Ionicons.glyphMap; title: string; subtitle: string; url: string }[] = [
   {
@@ -106,6 +116,44 @@ export default function HowToUseModal({ visible, onClose }: HowToUseModalProps) 
   const { colors } = useTheme();
   const styles = useThemedStyles(createStyles);
   const { height } = useWindowDimensions();
+  const viewport = height * 0.52;
+  const [scroll, setScroll] = useState({ offsetY: 0, contentHeight: 0 });
+
+  useEffect(() => {
+    if (visible) setScroll((prev) => ({ ...prev, offsetY: 0 }));
+  }, [visible]);
+
+  const onContentSizeChange = useCallback((_width: number, contentHeight: number) => {
+    if (typeof contentHeight !== "number" || contentHeight <= 0) return;
+    setScroll((prev) => ({ ...prev, contentHeight }));
+  }, []);
+
+  const onScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const nativeEvent = event?.nativeEvent;
+    const offsetY = nativeEvent?.contentOffset?.y;
+    const contentHeight = nativeEvent?.contentSize?.height;
+    if (typeof offsetY !== "number") return;
+    setScroll((prev) => ({
+      offsetY,
+      contentHeight: typeof contentHeight === "number" && contentHeight > 0 ? contentHeight : prev.contentHeight,
+    }));
+  }, []);
+
+  const { offsetY, contentHeight } = scroll;
+  const metricsReady = viewport > 0 && contentHeight > 0;
+  const canScroll = !metricsReady || contentHeight > viewport + 1;
+  const reachedEnd =
+    metricsReady &&
+    (contentHeight <= viewport + SCROLL_END_THRESHOLD ||
+      offsetY + viewport >= contentHeight - SCROLL_END_THRESHOLD);
+  const trackHeight = Math.max(0, viewport - SCROLL_TRACK_INSET * 2);
+  const contentForThumb = Math.max(contentHeight, viewport * 2.2, 1);
+  const thumbRatio = Number.isFinite(viewport / contentForThumb) ? viewport / contentForThumb : 0.35;
+  const thumbHeight = Math.min(trackHeight, Math.max(SCROLL_THUMB_MIN, thumbRatio * trackHeight));
+  const maxOffset = Math.max(1, contentForThumb - viewport);
+  const thumbTravel = Math.max(0, trackHeight - thumbHeight);
+  const thumbTop =
+    SCROLL_TRACK_INSET + Math.min(thumbTravel, Math.max(0, (offsetY / maxOffset) * thumbTravel));
 
   return (
     <Modal
@@ -123,13 +171,18 @@ export default function HowToUseModal({ visible, onClose }: HowToUseModalProps) 
             Follow these steps to share files between your Windows PC and this phone. No account needed.
           </Text>
 
-          <ScrollView
-            style={[styles.scroll, { height: height * 0.52 }]}
+          <View style={[styles.scrollWrap, { height: height * 0.52 }]}>
+            <ScrollView
+            style={styles.scroll}
             contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator
+            showsVerticalScrollIndicator={false}
+            persistentScrollbar
             nestedScrollEnabled
             bounces
             keyboardShouldPersistTaps="handled"
+            onContentSizeChange={onContentSizeChange}
+            onScroll={onScroll}
+            scrollEventThrottle={16}
           >
             {STEPS.map((step) => (
               <View key={step.number} style={styles.stepRow}>
@@ -167,13 +220,30 @@ export default function HowToUseModal({ visible, onClose }: HowToUseModalProps) 
               </Pressable>
             ))}
           </ScrollView>
+          {canScroll ? (
+            <View style={styles.scrollTrack} pointerEvents="none">
+              <View style={[styles.scrollThumb, { height: thumbHeight, top: thumbTop }]} />
+            </View>
+          ) : null}
+          </View>
 
-          <Pressable
-            style={({ pressed }) => [styles.close, pressed && styles.pressed]}
-            onPress={onClose}
-          >
-            <Text style={styles.closeText}>Got it</Text>
-          </Pressable>
+          {reachedEnd ? (
+            <Pressable
+              onPress={onClose}
+              android_ripple={{ color: "rgba(255,255,255,0.18)" }}
+              style={({ pressed }) => [styles.close, pressed && styles.pressed]}
+            >
+              <LinearGradient
+                colors={gradients.connect}
+                start={{ x: 0, y: 0.5 }}
+                end={{ x: 1, y: 0.5 }}
+                style={styles.closeGradient}
+              >
+                <Ionicons name="checkmark-circle" size={18} color="#FFFFFF" />
+                <Text style={styles.closeText}>Got it</Text>
+              </LinearGradient>
+            </Pressable>
+          ) : null}
         </View>
       </View>
     </Modal>
@@ -212,6 +282,11 @@ function createStyles(colors: ThemeColors) {
       fontSize: 13,
       lineHeight: 18,
     },
+    scrollWrap: {
+      position: "relative" as const,
+      flexGrow: 0,
+      flexShrink: 1,
+    },
     scroll: {
       flexGrow: 0,
       flexShrink: 1,
@@ -219,6 +294,23 @@ function createStyles(colors: ThemeColors) {
     scrollContent: {
       gap: 14,
       paddingBottom: 4,
+      paddingRight: 12,
+    },
+    scrollTrack: {
+      position: "absolute" as const,
+      top: 0,
+      right: 0,
+      bottom: 0,
+      width: 5,
+      borderRadius: 3,
+      backgroundColor: colors.border,
+    },
+    scrollThumb: {
+      position: "absolute" as const,
+      left: 0,
+      width: 5,
+      borderRadius: 3,
+      backgroundColor: colors.blueSoft,
     },
     stepRow: {
       flexDirection: "row" as const,
@@ -320,16 +412,23 @@ function createStyles(colors: ThemeColors) {
     },
     close: {
       marginTop: 4,
-      backgroundColor: colors.cardAlt,
       borderRadius: radius.md,
-      paddingVertical: 12,
+      overflow: "hidden" as const,
+    },
+    closeGradient: {
+      minHeight: 48,
+      flexDirection: "row" as const,
       alignItems: "center" as const,
-      borderWidth: 1,
-      borderColor: colors.border,
+      justifyContent: "center" as const,
+      gap: 8,
+      paddingHorizontal: 16,
     },
     closeText: {
       ...para(700),
-      color: colors.text,
+      color: "#FFFFFF",
+      fontSize: 16,
+      backgroundColor: "transparent",
+      lineHeight: 23,
     },
     pressed: {
       opacity: 0.75,

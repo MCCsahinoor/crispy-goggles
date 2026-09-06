@@ -1,7 +1,9 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useCallback, useEffect, useState } from "react";
-import { AppState, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { AppState, Platform, Pressable, StyleSheet, View } from "react-native";
 import WifiManager from "react-native-wifi-reborn";
+
+import { Text } from "../lib/disableFontScaling";
 
 import { WifiCredentials } from "../lib/filedrop";
 import { heading, para, radius, useTheme, useThemedStyles, type ThemeColors } from "../theme";

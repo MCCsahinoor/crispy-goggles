@@ -13,9 +13,13 @@ export function useAppInterstitial() {
       return;
     }
 
-    const interstitial = InterstitialAd.createForAdRequest(unitId);
-    adRef.current = interstitial;
-    interstitial.load();
+    try {
+      const interstitial = InterstitialAd.createForAdRequest(unitId);
+      adRef.current = interstitial;
+      interstitial.load();
+    } catch {
+      adRef.current = null;
+    }
 
     return () => {
       adRef.current = null;
@@ -62,7 +66,7 @@ export function useAppInterstitial() {
       });
       timeoutId = setTimeout(finish, 120000);
 
-      interstitial.show().catch(() => finish());
+      Promise.resolve(interstitial.show()).catch(() => finish());
     });
   }, []);
 }

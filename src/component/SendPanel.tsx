@@ -1,16 +1,20 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
+import * as Clipboard from "expo-clipboard";
 import * as DocumentPicker from "expo-document-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
+  useWindowDimensions,
   View,
 } from "react-native";
 import QRCode from "react-native-qrcode-svg";
+
+import { Text } from "../lib/disableFontScaling";
 
 import {
   createSendSession,
@@ -45,11 +49,13 @@ function mapPickedFiles(
 export default function SendPanel({ onToast }: SendPanelProps) {
   const { colors, scheme } = useTheme();
   const styles = useThemedStyles(createStyles);
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const [step, setStep] = useState<SendStep>("pick");
   const [files, setFiles] = useState<SendFile[]>([]);
   const [session, setSession] = useState<SendSession | null>(null);
   const [progress, setProgress] = useState<SendProgress | null>(null);
   const [waiting, setWaiting] = useState(false);
+  const [qrZoomed, setQrZoomed] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
 
   const reset = useCallback(() => {
@@ -60,6 +66,7 @@ export default function SendPanel({ onToast }: SendPanelProps) {
     setSession(null);
     setProgress(null);
     setWaiting(false);
+    setQrZoomed(false);
   }, []);
 
   useEffect(() => {
@@ -155,8 +162,21 @@ export default function SendPanel({ onToast }: SendPanelProps) {
     }
   }, [files, onToast]);
 
+  const copySendCode = useCallback(async () => {
+    if (!session) {
+      return;
+    }
+    try {
+      await Clipboard.setStringAsync(session.qrValue);
+      onToast("Copied. Paste it in Filora Desktop → Receive from phone.");
+    } catch {
+      onToast("Could not copy. Long-press the code to copy it.");
+    }
+  }, [onToast, session]);
+
   const qrColor = scheme === "dark" ? "#FFFFFF" : "#07080D";
   const qrBg = scheme === "dark" ? "#12141C" : "#FFFFFF";
+  const zoomedQrSize = Math.min(Math.min(windowWidth, windowHeight) - 48, 360);
 
   return (
     <View style={styles.panel}>
@@ -237,13 +257,45 @@ export default function SendPanel({ onToast }: SendPanelProps) {
       {(step === "qr" || step === "uploading") && session && (
         <View style={styles.qrBlock}>
           <StepLabel>Step 3 · Scan from Filora Desktop</StepLabel>
-          <View style={styles.qrWrap}>
+          <Pressable
+            onPress={() => setQrZoomed(true)}
+            accessibilityRole="button"
+            accessibilityLabel="Zoom QR code"
+            style={({ pressed }) => [styles.qrWrap, pressed && styles.pressed]}
+          >
             <QRCode value={session.qrValue} size={200} color={qrColor} backgroundColor={qrBg} />
-          </View>
+            <View style={styles.qrZoomBadge}>
+              <Ionicons name="expand-outline" size={16} color={colors.textMuted} />
+            </View>
+          </Pressable>
+          <Text style={styles.qrZoomCaption}>Tap QR to zoom</Text>
           <Text style={styles.qrHint}>
             On your PC, open Filora Desktop → Receive from phone → Scan this QR. Your phone will
             connect and upload automatically.
           </Text>
+          <View style={styles.codePath}>
+            <OrDivider />
+            <Text style={styles.codeLabel}>No camera? Copy this code</Text>
+            <View style={styles.codeRow}>
+              <Text style={styles.codeValue} numberOfLines={2} selectable>
+                {session.qrValue}
+              </Text>
+              <Pressable
+                onPress={() => {
+                  void copySendCode();
+                }}
+                accessibilityRole="button"
+                accessibilityLabel="Copy send code"
+                style={({ pressed }) => [styles.copyButton, pressed && styles.pressed]}
+              >
+                <Ionicons name="copy-outline" size={14} color={colors.purpleSoft} />
+                <Text style={styles.copyButtonText}>Copy</Text>
+              </Pressable>
+            </View>
+            <Text style={styles.codeHint}>
+              Paste it in Filora Desktop → Receive from phone.
+            </Text>
+          </View>
           {progress?.phase === "waiting" && (
             <View style={styles.statusRow}>
               <ActivityIndicator size="small" color={colors.blueSoft} />
@@ -291,6 +343,28 @@ export default function SendPanel({ onToast }: SendPanelProps) {
           </View>
         </View>
       )}
+
+      <Modal
+        transparent
+        visible={qrZoomed && !!session}
+        animationType="fade"
+        statusBarTranslucent
+        onRequestClose={() => setQrZoomed(false)}
+      >
+        <Pressable style={styles.qrZoomBackdrop} onPress={() => setQrZoomed(false)}>
+          <View style={styles.qrZoomCard} pointerEvents="none">
+            {session ? (
+              <QRCode
+                value={session.qrValue}
+                size={zoomedQrSize}
+                color={qrColor}
+                backgroundColor={qrBg}
+              />
+            ) : null}
+          </View>
+          <Text style={styles.qrZoomCloseHint}>Tap to close</Text>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -424,11 +498,107 @@ function createStyles(colors: ThemeColors) {
       borderWidth: 1,
       borderColor: colors.border,
     },
+    qrZoomBadge: {
+      position: "absolute",
+      right: 10,
+      bottom: 10,
+      width: 28,
+      height: 28,
+      borderRadius: 8,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: colors.bgElevated,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    qrZoomCaption: {
+      ...para(500),
+      color: colors.textDim,
+      fontSize: 12,
+      lineHeight: 16,
+      marginTop: -4,
+    },
+    qrZoomBackdrop: {
+      flex: 1,
+      backgroundColor: colors.overlay,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: 24,
+      gap: 16,
+    },
+    qrZoomCard: {
+      padding: 20,
+      borderRadius: radius.lg,
+      backgroundColor: colors.card,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    qrZoomCloseHint: {
+      ...para(600),
+      color: "#FFFFFF",
+      fontSize: 14,
+    },
     qrHint: {
       ...para(),
       color: colors.textMuted,
       fontSize: 13,
       lineHeight: 18,
+      textAlign: "center",
+    },
+    codePath: {
+      alignSelf: "stretch",
+      width: "100%",
+      gap: 10,
+    },
+    codeLabel: {
+      ...heading(),
+      color: colors.textMuted,
+      fontSize: 12,
+      textTransform: "uppercase",
+      letterSpacing: 0.8,
+      textAlign: "center",
+    },
+    codeRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      backgroundColor: colors.inputBg,
+      borderWidth: 1,
+      borderColor: colors.inputBorder,
+      borderRadius: radius.md,
+      paddingLeft: 12,
+      paddingRight: 8,
+      paddingVertical: 8,
+      minHeight: 50,
+    },
+    codeValue: {
+      ...para(),
+      flex: 1,
+      color: colors.text,
+      fontSize: 12,
+      lineHeight: 16,
+    },
+    copyButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+      borderWidth: 1,
+      borderColor: colors.purple,
+      borderRadius: radius.full,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+    },
+    copyButtonText: {
+      ...para(700),
+      color: colors.purpleSoft,
+      fontSize: 12,
+      lineHeight: 16,
+    },
+    codeHint: {
+      ...para(),
+      color: colors.textMuted,
+      fontSize: 12,
+      lineHeight: 16,
       textAlign: "center",
     },
     statusRow: {

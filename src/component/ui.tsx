@@ -1,6 +1,8 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+
+import { Text, TextInput } from "../lib/disableFontScaling";
 
 import { gradients, heading, para, radius, useTheme, useThemedStyles, type ThemeColors } from "../theme";
 

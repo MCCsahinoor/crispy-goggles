@@ -5,7 +5,9 @@ import {
   ScanActionCard,
   ShareLinkField,
 } from "./ui";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+
+import { Text } from "../lib/disableFontScaling";
 
 import { heading, para, useThemedStyles, type ThemeColors } from "../theme";
 

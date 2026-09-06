@@ -2,7 +2,7 @@
   "expo": {
     "name": "Filora",
     "slug": "filora",
-    "version": "1.0.2",
+    "version": "1.0.6",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -14,7 +14,7 @@
       }
     },
     "android": {
-      "versionCode": 3,
+      "versionCode": 7,
       "adaptiveIcon": {
         "backgroundColor": "#0084FF",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -51,13 +51,14 @@
           "android": {
             "usesCleartextTraffic": true,
             "enableMinifyInReleaseBuilds": true,
-            "extraProguardRules": "-keep class com.facebook.react.** { *; }\n-keep class com.facebook.hermes.** { *; }\n-keep class expo.modules.** { *; }\n-keep class com.google.android.gms.ads.** { *; }"
+            "extraProguardRules": "-keep class com.facebook.react.** { *; }\n-keep class com.facebook.hermes.** { *; }\n-keep class expo.modules.** { *; }\n-keep class com.google.android.gms.** { *; }\n-keep class com.google.android.play.** { *; }\n-keep class io.invertase.googlemobileads.** { *; }\n-dontwarn com.google.android.gms.**\n-dontwarn com.google.android.play.**"
           }
         }
       ],
       "./plugins/withKotlinMetadataCompat.js",
       "./plugins/withReleaseSigning.js",
       "./plugins/withReleaseBuild.js",
+      "./plugins/withFixedDisplayMetrics.js",
       [
         "expo-camera",
         {

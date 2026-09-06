@@ -13,10 +13,9 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
-  TextInput,
   View,
 } from "react-native";
+import { Text, TextInput } from "./src/lib/disableFontScaling";
 import {
   SafeAreaProvider,
   SafeAreaView,
@@ -500,7 +499,15 @@ function AppShell() {
     connectionMode === "local" ? "rgba(168,85,247,0.16)" : "rgba(59,130,246,0.16)";
 
   return (
-    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+    <SafeAreaProvider
+      initialMetrics={
+        initialWindowMetrics &&
+        initialWindowMetrics.frame.width > 0 &&
+        initialWindowMetrics.frame.height > 0
+          ? initialWindowMetrics
+          : undefined
+      }
+    >
       {scanning ? (
         <View style={styles.scanContainer}>
           <StatusBar style="light" />
