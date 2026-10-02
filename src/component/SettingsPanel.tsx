@@ -35,6 +35,7 @@ import {
   type ThemeColors,
   type ThemeMode,
 } from "../theme";
+import { shareFiloraApp } from "../lib/shareApp";
 import { checkAndPromptAppUpdate, getAppVersion } from "../lib/inAppUpdates";
 import {
   FILORA_PRIVACY_URL,
@@ -337,6 +338,15 @@ export default function SettingsPanel({ onOpenHowTo }: SettingsPanelProps) {
           icon="shield-outline"
           title={t("settings.privacy")}
           onPress={() => setPrivacyOpen(true)}
+        />
+        <SettingsRow
+          icon="share-social-outline"
+          title={t("settings.shareApp")}
+          subtitle={t("settings.shareAppSubtitle")}
+          chevron
+          onPress={() => {
+            void shareFiloraApp();
+          }}
         />
         <SettingsRow
           icon="phone-portrait-outline"

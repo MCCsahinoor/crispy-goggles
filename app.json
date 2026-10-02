@@ -91,7 +91,16 @@
             "imageWidth": 200
           }
         }
-      ]
+      ],
+      [
+        "react-native-share",
+        {
+          "android": [],
+          "ios": [],
+          "enableBase64ShareAndroid": true
+        }
+      ],
+      "expo-asset"
     ]
   }
 }
