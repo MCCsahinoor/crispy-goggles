@@ -56,7 +56,9 @@ import {
   enableLocationServices,
   getLocationWifiReadiness,
   requestLocationPermission,
+  type LocationWifiReadiness,
 } from "./src/lib/permissions";
+import { useLayout } from "./src/lib/responsive";
 import { saveFileToAppFolder } from "./src/lib/saveDownload";
 import {
   gradients,
@@ -91,6 +93,16 @@ function AppShell() {
   const showInterstitial = useAppInterstitial();
   const { colors, scheme } = useTheme();
   const styles = useThemedStyles(createStyles);
+  const layout = useLayout();
+  const columnStyle = [
+    styles.column,
+    { maxWidth: layout.contentMaxWidth, paddingHorizontal: layout.gutter },
+  ];
+  // Same width/padding as the column but no flex, so the footer hugs the bottom edge.
+  const footerStyle = [
+    styles.footerColumn,
+    { maxWidth: layout.contentMaxWidth, paddingHorizontal: layout.gutter },
+  ];
   const [screen, setScreen] = useState<Screen>("connect");
   const [homeTab, setHomeTab] = useState<HomeTab>("connect");
   const [helpOpen, setHelpOpen] = useState(true);
@@ -112,6 +124,7 @@ function AppShell() {
   const scanPurposeRef = useRef<ScanPurpose>("share");
   const pendingLocationActionRef = useRef<(() => void | Promise<void>) | null>(null);
   const [locationModalOpen, setLocationModalOpen] = useState(false);
+  const [locationModalReason, setLocationModalReason] = useState<Exclude<LocationWifiReadiness, "ready">>("permission_denied");
   const [enablingLocation, setEnablingLocation] = useState(false);
   const [permission, requestPermission] = useCameraPermissions();
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -356,6 +369,7 @@ function AppShell() {
       return;
     }
     pendingLocationActionRef.current = action;
+    setLocationModalReason(readiness);
     setLocationModalOpen(true);
   }, []);
 
@@ -520,18 +534,22 @@ function AppShell() {
                 : undefined
             }
           />
-          <SafeAreaView edges={["bottom"]} style={styles.scanOverlay}>
-            <Text style={styles.scanTitle}>{scanTitle}</Text>
+          <SafeAreaView
+            edges={["bottom", "left", "right"]}
+            style={[styles.scanOverlay, { paddingHorizontal: layout.gutter }]}
+          >
+            <Text style={[styles.scanTitle, { maxWidth: layout.contentMaxWidth }]}>{scanTitle}</Text>
             <Pressable style={({ pressed }) => [styles.scanCancel, pressed && styles.pressed]} onPress={() => setScanning(false)} >
               <Text style={styles.scanCancelText}>Cancel</Text>
             </Pressable>
           </SafeAreaView>
         </View>
       ) : (
-        <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
+        <SafeAreaView style={styles.container} edges={["top", "bottom", "left", "right"]}>
           <StatusBar style={scheme === "dark" ? "light" : "dark"} />
           <LinearGradient colors={[glowColor, "transparent"]} style={styles.ambientGlow} />
 
+          <View style={columnStyle}>
           <View style={styles.header}>
             <View style={styles.headerLeft}>
               <Image
@@ -637,44 +655,6 @@ function AppShell() {
                   </View>
                 )}
               </ScrollView>
-
-              <View style={styles.adBleed}>
-                <AdBanner />
-              </View>
-
-              <View style={styles.bottomBar}>
-                <Pressable
-                  style={({ pressed }) => [styles.bottomItem, pressed && styles.pressed]}
-                  onPress={() => {
-                    setHomeTab("connect");
-                    setConnectionMode("global");
-                    setLocalConnectError("");
-                    clearToast();
-                  }}
-                >
-                  <Ionicons name="cloud-download-outline" size={20} color={homeTab === "connect" ? colors.blueSoft : colors.textMuted} />
-                  <Text style={[styles.bottomItemText, homeTab === "connect" && styles.bottomItemTextActive,]} > Received </Text>
-                </Pressable>
-                <View style={styles.bottomDivider} />
-                <Pressable style={({ pressed }) => [styles.bottomItem, pressed && styles.pressed]}
-                  onPress={() => {
-                    setHomeTab("send");
-                    clearToast();
-                  }} >
-                  <Ionicons name="cloud-upload-outline" size={20} color={homeTab === "send" ? colors.purpleSoft : colors.textMuted} />
-                  <Text style={[styles.bottomItemText, homeTab === "send" && styles.bottomItemTextActive,]} > Send </Text>
-                </Pressable>
-                <View style={styles.bottomDivider} />
-                {/* <Pressable style={({ pressed }) => [styles.bottomItem, pressed && styles.pressed]} onPress={() => setHomeTab("history")} >
-                  <Ionicons name="time-outline" size={20} color={homeTab === "history" ? colors.blueSoft : colors.textMuted} />
-                  <Text style={[ styles.bottomItemText, homeTab === "history" && styles.bottomItemTextActive, ]} > History </Text>
-                </Pressable> */}
-                <View style={styles.bottomDivider} />
-                <Pressable style={({ pressed }) => [styles.bottomItem, pressed && styles.pressed]} onPress={() => setHomeTab("settings")} >
-                  <Ionicons name="settings-outline" size={20} color={homeTab === "settings" ? colors.purpleSoft : colors.textMuted} />
-                  <Text style={[styles.bottomItemText, homeTab === "settings" && styles.bottomItemTextActive]}> Settings </Text>
-                </Pressable>
-              </View>
             </>
           )}
 
@@ -736,11 +716,62 @@ function AppShell() {
               onDisconnect={resetSession}
             />
           )}
+          </View>
+
+          {screen === "connect" && (
+            <>
+              <View style={styles.adBleed}>
+                <AdBanner />
+              </View>
+
+              <View style={footerStyle}>
+                <View style={styles.bottomBar}>
+                  <Pressable
+                    style={({ pressed }) => [styles.bottomItem, pressed && styles.pressed]}
+                    onPress={() => {
+                      setHomeTab("connect");
+                      setConnectionMode("global");
+                      setLocalConnectError("");
+                      clearToast();
+                    }}
+                  >
+                    <Ionicons name="cloud-download-outline" size={18} color={homeTab === "connect" ? colors.blueSoft : colors.textMuted} />
+                    <Text style={[styles.bottomItemText, homeTab === "connect" && styles.bottomItemTextActive]}> Received </Text>
+                  </Pressable>
+                  <View style={styles.bottomDivider} />
+                  <Pressable
+                    style={({ pressed }) => [styles.bottomItem, pressed && styles.pressed]}
+                    onPress={() => {
+                      setHomeTab("send");
+                      clearToast();
+                    }}
+                  >
+                    <Ionicons name="cloud-upload-outline" size={18} color={homeTab === "send" ? colors.purpleSoft : colors.textMuted} />
+                    <Text style={[styles.bottomItemText, homeTab === "send" && styles.bottomItemTextActive]}> Send </Text>
+                  </Pressable>
+                  <View style={styles.bottomDivider} />
+                  {/* <Pressable style={({ pressed }) => [styles.bottomItem, pressed && styles.pressed]} onPress={() => setHomeTab("history")} >
+                    <Ionicons name="time-outline" size={20} color={homeTab === "history" ? colors.blueSoft : colors.textMuted} />
+                    <Text style={[ styles.bottomItemText, homeTab === "history" && styles.bottomItemTextActive, ]} > History </Text>
+                  </Pressable> */}
+                  <View style={styles.bottomDivider} />
+                  <Pressable
+                    style={({ pressed }) => [styles.bottomItem, pressed && styles.pressed]}
+                    onPress={() => setHomeTab("settings")}
+                  >
+                    <Ionicons name="settings-outline" size={18} color={homeTab === "settings" ? colors.purpleSoft : colors.textMuted} />
+                    <Text style={[styles.bottomItemText, homeTab === "settings" && styles.bottomItemTextActive]}> Settings </Text>
+                  </Pressable>
+                </View>
+              </View>
+            </>
+          )}
         </SafeAreaView>
       )}
 
       <LocationRequiredModal
         visible={locationModalOpen}
+        reason={locationModalReason}
         enabling={enablingLocation}
         onEnable={() => {
           void handleEnableLocation();
@@ -755,10 +786,11 @@ function AppShell() {
         visible={loading && !scanning}
         animationType="fade"
         statusBarTranslucent
+        supportedOrientations={["portrait", "landscape"]}
         onRequestClose={() => { }}
       >
         <View style={styles.overlayLoaderBackdrop}>
-          <View style={styles.loaderCard}>
+          <View style={[styles.loaderCard, { maxWidth: layout.modalMaxWidth }]}>
             <ActivityIndicator size="large" color={colors.blueSoft} />
             <Text style={styles.loaderText}>{busyMessage || "Working..."}</Text>
           </View>
@@ -773,7 +805,18 @@ function createStyles(colors: ThemeColors) {
     container: {
       flex: 1,
       backgroundColor: colors.bg,
-      paddingHorizontal: 16,
+      alignItems: "center",
+    },
+    column: {
+      flex: 1,
+      width: "100%",
+      alignSelf: "center",
+    },
+    footerColumn: {
+      flexGrow: 0,
+      flexShrink: 0,
+      width: "100%",
+      alignSelf: "center",
     },
     ambientGlow: {
       position: "absolute",
@@ -967,33 +1010,34 @@ function createStyles(colors: ThemeColors) {
       color: colors.warning,
     },
     adBleed: {
-      marginHorizontal: -16,
+      alignSelf: "stretch",
     },
     bottomBar: {
       flexDirection: "row",
       alignItems: "center",
       borderTopWidth: 1,
       borderTopColor: colors.border,
-      paddingTop: 10,
-      paddingBottom: 6,
+      paddingTop: 8,
+      paddingBottom: 8,
     },
     bottomItem: {
       flex: 1,
       alignItems: "center",
-      gap: 4,
-      paddingVertical: 4,
+      gap: 1,
+      paddingVertical: 2,
     },
     bottomItemText: {
       ...para(700),
       color: colors.textMuted,
-      fontSize: 12,
+      fontSize: 11,
+      lineHeight: 14,
     },
     bottomItemTextActive: {
       color: colors.text,
     },
     bottomDivider: {
       width: StyleSheet.hairlineWidth,
-      height: 28,
+      height: 22,
       backgroundColor: colors.borderStrong,
     },
     overlayLoaderBackdrop: {
@@ -1010,7 +1054,7 @@ function createStyles(colors: ThemeColors) {
       paddingVertical: 28,
       alignItems: "center",
       gap: 16,
-      minWidth: 220,
+      minWidth: 200,
       borderWidth: 1,
       borderColor: colors.border,
     },

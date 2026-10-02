@@ -4,7 +4,6 @@ import {
   ActivityIndicator,
   Alert,
   Linking,
-  Modal,
   Platform,
   Pressable,
   View,
@@ -42,6 +41,7 @@ import {
   FILORA_WEBSITE_URL,
   FILORA_WINDOWS_DOWNLOAD_URL,
 } from "../lib/links";
+import ModalFrame from "./ModalFrame";
 import { Divider } from "./ui";
 
 const THEME_OPTIONS: { mode: ThemeMode; icon: keyof typeof Ionicons.glyphMap }[] = [
@@ -355,107 +355,92 @@ export default function SettingsPanel({ onOpenHowTo }: SettingsPanelProps) {
         </View>
       )}
 
-      <Modal
-        transparent
+      <ModalFrame
         visible={languageOpen}
-        animationType="fade"
-        onRequestClose={() => setLanguageOpen(false)}
+        onClose={() => setLanguageOpen(false)}
+        gap={4}
+        scroll={false}
+        header={<Text style={styles.modalTitle}>Language</Text>}
       >
-        <Pressable style={styles.modalBackdrop} onPress={() => setLanguageOpen(false)}>
-          <Pressable style={styles.modalCard} onPress={() => { }}>
-            <Text style={styles.modalTitle}>Language</Text>
+        <Pressable
+          style={styles.optionRow}
+          onPress={() => {
+            setLanguage("English");
+            setLanguageOpen(false);
+          }}
+        >
+          <Text style={styles.optionText}>🇬🇧 English</Text>
+          <Ionicons name="checkmark" size={18} color={colors.blueSoft} />
+        </Pressable>
+      </ModalFrame>
+
+      <ModalFrame
+        visible={themeOpen}
+        onClose={() => setThemeOpen(false)}
+        gap={4}
+        header={<Text style={styles.modalTitle}>Theme</Text>}
+      >
+        {THEME_OPTIONS.map((option) => {
+          const selected = mode === option.mode;
+          return (
             <Pressable
+              key={option.mode}
               style={styles.optionRow}
               onPress={() => {
-                setLanguage("English");
-                setLanguageOpen(false);
+                setMode(option.mode);
+                setThemeOpen(false);
               }}
             >
-              <Text style={styles.optionText}>🇬🇧 English</Text>
-              <Ionicons name="checkmark" size={18} color={colors.blueSoft} />
+              <Ionicons name={option.icon} size={20} color={colors.text} />
+              <Text style={styles.optionText}>{THEME_MODE_LABELS[option.mode]}</Text>
+              {selected && <Ionicons name="checkmark" size={18} color={colors.blueSoft} />}
             </Pressable>
-          </Pressable>
-        </Pressable>
-      </Modal>
+          );
+        })}
+      </ModalFrame>
 
-      <Modal
-        transparent
-        visible={themeOpen}
-        animationType="fade"
-        onRequestClose={() => setThemeOpen(false)}
-      >
-        <Pressable style={styles.modalBackdrop} onPress={() => setThemeOpen(false)}>
-          <Pressable style={styles.modalCard} onPress={() => { }}>
-            <Text style={styles.modalTitle}>Theme</Text>
-            {THEME_OPTIONS.map((option) => {
-              const selected = mode === option.mode;
-              return (
-                <Pressable
-                  key={option.mode}
-                  style={styles.optionRow}
-                  onPress={() => {
-                    setMode(option.mode);
-                    setThemeOpen(false);
-                  }}
-                >
-                  <Ionicons name={option.icon} size={20} color={colors.text} />
-                  <Text style={styles.optionText}>{THEME_MODE_LABELS[option.mode]}</Text>
-                  {selected && <Ionicons name="checkmark" size={18} color={colors.blueSoft} />}
-                </Pressable>
-              );
-            })}
-          </Pressable>
-        </Pressable>
-      </Modal>
-
-      <Modal
-        transparent
+      <ModalFrame
         visible={aboutOpen}
-        animationType="fade"
-        onRequestClose={() => setAboutOpen(false)}
-      >
-        <Pressable style={styles.modalBackdrop} onPress={() => setAboutOpen(false)}>
-          <Pressable style={styles.modalCard} onPress={() => { }}>
-            <Text style={styles.modalTitle}>Filora</Text>
-            <Text style={styles.modalBody}>Filora is the phone companion for Filora on Windows. Connect to a share on your PC and save files to your phone — no account required.</Text>
-            <Text style={styles.modalBody}>Use Global link when the PC is sharing over the internet. Paste the share URL or scan the Share QR. Mobile data works.</Text>
-            <Text style={styles.modalBody}>Use Local network on the same Wi-Fi or PC hotspot. Scan the Wi-Fi QR to join the PC network, then scan the Share QR or paste the local link.</Text>
-            <Text style={styles.modalBody}>If the share is password-protected, unlock it on your phone, browse the file list, and save files to your Filora folder. Light and dark themes, connection history, and permission controls are in Settings.</Text>
-            <Text style={styles.modalBody}>Requires Filora running on your Windows PC with files added to the share.</Text>
-            <Pressable style={styles.modalClose} onPress={() => setAboutOpen(false)}>
-              <Text style={styles.modalCloseText}>Close</Text>
-            </Pressable>
+        onClose={() => setAboutOpen(false)}
+        gap={8}
+        header={<Text style={styles.modalTitle}>Filora</Text>}
+        footer={
+          <Pressable style={styles.modalClose} onPress={() => setAboutOpen(false)}>
+            <Text style={styles.modalCloseText}>Close</Text>
           </Pressable>
-        </Pressable>
-      </Modal>
+        }
+      >
+        <Text style={styles.modalBody}>Filora is the phone companion for Filora on Windows. Connect to a share on your PC and save files to your phone — no account required.</Text>
+        <Text style={styles.modalBody}>Use Global link when the PC is sharing over the internet. Paste the share URL or scan the Share QR. Mobile data works.</Text>
+        <Text style={styles.modalBody}>Use Local network on the same Wi-Fi or PC hotspot. Scan the Wi-Fi QR to join the PC network, then scan the Share QR or paste the local link.</Text>
+        <Text style={styles.modalBody}>If the share is password-protected, unlock it on your phone, browse the file list, and save files to your Filora folder. Light and dark themes, connection history, and permission controls are in Settings.</Text>
+        <Text style={styles.modalBody}>Requires Filora running on your Windows PC with files added to the share.</Text>
+      </ModalFrame>
 
-      <Modal
-        transparent
+      <ModalFrame
         visible={privacyOpen}
-        animationType="fade"
-        onRequestClose={() => setPrivacyOpen(false)}
-      >
-        <Pressable style={styles.modalBackdrop} onPress={() => setPrivacyOpen(false)}>
-          <Pressable style={styles.modalCard} onPress={() => { }}>
-            <Text style={styles.modalTitle}>Privacy policy</Text>
-            <Text style={styles.modalBody}>
-              Filora connects directly to Filora on your PC. It does not require an
-              account. Share links you paste and files you download stay on this device unless you
-              share them yourself. The app shows ads from Google AdMob.
-            </Text>
-            <Pressable
-              style={({ pressed }) => [styles.readMore, pressed && styles.pressed]}
-              onPress={() => Linking.openURL(FILORA_PRIVACY_URL)}
-            >
-              <Text style={styles.readMoreText}>Read more</Text>
-              <Ionicons name="open-outline" size={15} color={colors.blueSoft} />
-            </Pressable>
-            <Pressable style={styles.modalClose} onPress={() => setPrivacyOpen(false)}>
-              <Text style={styles.modalCloseText}>Close</Text>
-            </Pressable>
+        onClose={() => setPrivacyOpen(false)}
+        gap={8}
+        header={<Text style={styles.modalTitle}>Privacy policy</Text>}
+        footer={
+          <Pressable style={styles.modalClose} onPress={() => setPrivacyOpen(false)}>
+            <Text style={styles.modalCloseText}>Close</Text>
           </Pressable>
+        }
+      >
+        <Text style={styles.modalBody}>
+          Filora connects directly to Filora on your PC. It does not require an
+          account. Share links you paste and files you download stay on this device unless you
+          share them yourself. The app shows ads from Google AdMob.
+        </Text>
+        <Pressable
+          style={({ pressed }) => [styles.readMore, pressed && styles.pressed]}
+          onPress={() => Linking.openURL(FILORA_PRIVACY_URL)}
+        >
+          <Text style={styles.readMoreText}>Read more</Text>
+          <Ionicons name="open-outline" size={15} color={colors.blueSoft} />
         </Pressable>
-      </Modal>
+      </ModalFrame>
     </View>
   );
 }
@@ -524,20 +509,6 @@ function createStyles(colors: ThemeColors) {
       color: colors.textMuted,
       fontSize: 13,
     },
-    modalBackdrop: {
-      flex: 1,
-      backgroundColor: colors.overlay,
-      justifyContent: "center" as const,
-      paddingHorizontal: 24,
-    },
-    modalCard: {
-      backgroundColor: colors.card,
-      borderRadius: radius.lg,
-      padding: 20,
-      gap: 4,
-      borderWidth: 1,
-      borderColor: colors.border,
-    },
     modalTitle: {
       ...heading(600),
       color: colors.text,
@@ -564,7 +535,7 @@ function createStyles(colors: ThemeColors) {
       fontSize: 14,
     },
     modalClose: {
-      marginTop: 8,
+      marginTop: 4,
       backgroundColor: colors.cardAlt,
       borderRadius: radius.md,
       paddingVertical: 12,

@@ -1,17 +1,6 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useCallback, useEffect, useState } from "react";
-import {
-  Linking,
-  Modal,
-  type NativeScrollEvent,
-  type NativeSyntheticEvent,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  useWindowDimensions,
-  View,
-} from "react-native";
+import { Linking, Pressable, View } from "react-native";
 
 import { Text } from "../lib/disableFontScaling";
 
@@ -21,6 +10,7 @@ import {
   FILORA_WINDOWS_DOWNLOAD_URL,
 } from "../lib/links";
 import { gradients, heading, para, radius, useTheme, useThemedStyles, type ThemeColors } from "../theme";
+import ModalFrame from "./ModalFrame";
 
 type HowToUseModalProps = {
   visible: boolean;
@@ -87,22 +77,22 @@ const STEPS: Step[] = [
   },
 ];
 
-const SCROLL_END_THRESHOLD = 24;
-const SCROLL_THUMB_MIN = 28;
-const SCROLL_TRACK_INSET = 4;
+type HelpLink = { icon: keyof typeof Ionicons.glyphMap; title: string; subtitle: string; url: string };
 
-const LINKS: { icon: keyof typeof Ionicons.glyphMap; title: string; subtitle: string; url: string }[] = [
+/** Pinned above "Got it" so it is always visible while the steps scroll. */
+const WINDOWS_DOWNLOAD_LINK: HelpLink = {
+  icon: "desktop-outline",
+  title: "Download for Windows",
+  subtitle: "Get Filora.exe for Windows 10/11",
+  url: FILORA_WINDOWS_DOWNLOAD_URL,
+};
+
+const LINKS: HelpLink[] = [
   {
     icon: "globe-outline",
     title: "Official website",
     subtitle: "Features, FAQ, and how Filora works",
     url: FILORA_WEBSITE_URL,
-  },
-  {
-    icon: "desktop-outline",
-    title: "Download for Windows",
-    subtitle: "Get Filora.exe for Windows 10/11",
-    url: FILORA_WINDOWS_DOWNLOAD_URL,
   },
   {
     icon: "shield-outline",
@@ -115,166 +105,121 @@ const LINKS: { icon: keyof typeof Ionicons.glyphMap; title: string; subtitle: st
 export default function HowToUseModal({ visible, onClose }: HowToUseModalProps) {
   const { colors } = useTheme();
   const styles = useThemedStyles(createStyles);
-  const { height } = useWindowDimensions();
-  const viewport = height * 0.52;
-  const [scroll, setScroll] = useState({ offsetY: 0, contentHeight: 0 });
 
-  useEffect(() => {
-    if (visible) setScroll((prev) => ({ ...prev, offsetY: 0 }));
-  }, [visible]);
-
-  const onContentSizeChange = useCallback((_width: number, contentHeight: number) => {
-    if (typeof contentHeight !== "number" || contentHeight <= 0) return;
-    setScroll((prev) => ({ ...prev, contentHeight }));
-  }, []);
-
-  const onScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const nativeEvent = event?.nativeEvent;
-    const offsetY = nativeEvent?.contentOffset?.y;
-    const contentHeight = nativeEvent?.contentSize?.height;
-    if (typeof offsetY !== "number") return;
-    setScroll((prev) => ({
-      offsetY,
-      contentHeight: typeof contentHeight === "number" && contentHeight > 0 ? contentHeight : prev.contentHeight,
-    }));
-  }, []);
-
-  const { offsetY, contentHeight } = scroll;
-  const metricsReady = viewport > 0 && contentHeight > 0;
-  const canScroll = !metricsReady || contentHeight > viewport + 1;
-  const reachedEnd =
-    metricsReady &&
-    (contentHeight <= viewport + SCROLL_END_THRESHOLD ||
-      offsetY + viewport >= contentHeight - SCROLL_END_THRESHOLD);
-  const trackHeight = Math.max(0, viewport - SCROLL_TRACK_INSET * 2);
-  const contentForThumb = Math.max(contentHeight, viewport * 2.2, 1);
-  const thumbRatio = Number.isFinite(viewport / contentForThumb) ? viewport / contentForThumb : 0.35;
-  const thumbHeight = Math.min(trackHeight, Math.max(SCROLL_THUMB_MIN, thumbRatio * trackHeight));
-  const maxOffset = Math.max(1, contentForThumb - viewport);
-  const thumbTravel = Math.max(0, trackHeight - thumbHeight);
-  const thumbTop =
-    SCROLL_TRACK_INSET + Math.min(thumbTravel, Math.max(0, (offsetY / maxOffset) * thumbTravel));
+  const renderLink = (link: HelpLink) => (
+    <Pressable
+      key={link.url}
+      onPress={() => Linking.openURL(link.url)}
+      style={({ pressed }) => [styles.linkRow, pressed && styles.pressed]}
+    >
+      <View style={styles.linkIcon}>
+        <Ionicons name={link.icon} size={18} color={colors.blueSoft} />
+      </View>
+      <View style={styles.linkCopy}>
+        <Text style={styles.linkTitle}>{link.title}</Text>
+        <Text style={styles.linkSubtitle}>{link.subtitle}</Text>
+      </View>
+      <Ionicons name="open-outline" size={16} color={colors.blueSoft} />
+    </Pressable>
+  );
 
   return (
-    <Modal
-      transparent
+    <ModalFrame
       visible={visible}
-      animationType="fade"
-      statusBarTranslucent
-      onRequestClose={onClose}
-    >
-      <View style={styles.backdrop}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
-        <View style={[styles.card, { maxHeight: height * 0.86 }]}>
-          <Text style={styles.title}>How to use Filora</Text>
+      onClose={onClose}
+      gap={14}
+      accessibilityLabel="Close how to use"
+      header={
+        <View style={styles.header}>
+          <View style={styles.titleRow}>
+            <Text style={styles.title}>How to use Filora</Text>
+            <Pressable
+              onPress={onClose}
+              hitSlop={12}
+              style={({ pressed }) => [styles.iconClose, pressed && styles.pressed]}
+              accessibilityLabel="Close"
+            >
+              <Ionicons name="close" size={20} color={colors.textMuted} />
+            </Pressable>
+          </View>
           <Text style={styles.intro}>
             Follow these steps to share files between your Windows PC and this phone. No account needed.
           </Text>
-
-          <View style={[styles.scrollWrap, { height: height * 0.52 }]}>
-            <ScrollView
-            style={styles.scroll}
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-            persistentScrollbar
-            nestedScrollEnabled
-            bounces
-            keyboardShouldPersistTaps="handled"
-            onContentSizeChange={onContentSizeChange}
-            onScroll={onScroll}
-            scrollEventThrottle={16}
+        </View>
+      }
+      footer={
+        <View style={styles.footer}>
+          {renderLink(WINDOWS_DOWNLOAD_LINK)}
+          <Pressable
+            onPress={onClose}
+            android_ripple={{ color: "rgba(255,255,255,0.18)" }}
+            style={({ pressed }) => [styles.close, pressed && styles.pressed]}
           >
-            {STEPS.map((step) => (
-              <View key={step.number} style={styles.stepRow}>
-                <View style={styles.stepBadge}>
-                  <Text style={styles.stepNumber}>{step.number}</Text>
-                </View>
-                <View style={styles.stepCopy}>
-                  <Text style={styles.stepTitle}>{step.title}</Text>
-                  <Text style={styles.stepBody}>{step.body}</Text>
-                  {step.bullets?.map((item) => (
-                    <View key={item} style={styles.bulletRow}>
-                      <View style={styles.bulletDot} />
-                      <Text style={styles.bulletText}>{item}</Text>
-                    </View>
-                  ))}
-                </View>
+            <LinearGradient
+              colors={gradients.connect}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
+              style={styles.closeGradient}
+            >
+              <Ionicons name="checkmark-circle" size={18} color="#FFFFFF" />
+              <Text style={styles.closeText}>Got it</Text>
+            </LinearGradient>
+          </Pressable>
+        </View>
+      }
+    >
+      {STEPS.map((step) => (
+        <View key={step.number} style={styles.stepRow}>
+          <View style={styles.stepBadge}>
+            <Text style={styles.stepNumber}>{step.number}</Text>
+          </View>
+          <View style={styles.stepCopy}>
+            <Text style={styles.stepTitle}>{step.title}</Text>
+            <Text style={styles.stepBody}>{step.body}</Text>
+            {step.bullets?.map((item) => (
+              <View key={item} style={styles.bulletRow}>
+                <View style={styles.bulletDot} />
+                <Text style={styles.bulletText}>{item}</Text>
               </View>
             ))}
-
-            <Text style={styles.linksHeading}>Helpful links</Text>
-            {LINKS.map((link) => (
-              <Pressable
-                key={link.url}
-                onPress={() => Linking.openURL(link.url)}
-                style={({ pressed }) => [styles.linkRow, pressed && styles.pressed]}
-              >
-                <View style={styles.linkIcon}>
-                  <Ionicons name={link.icon} size={18} color={colors.blueSoft} />
-                </View>
-                <View style={styles.linkCopy}>
-                  <Text style={styles.linkTitle}>{link.title}</Text>
-                  <Text style={styles.linkSubtitle}>{link.subtitle}</Text>
-                </View>
-                <Ionicons name="open-outline" size={16} color={colors.blueSoft} />
-              </Pressable>
-            ))}
-          </ScrollView>
-          {canScroll ? (
-            <View style={styles.scrollTrack} pointerEvents="none">
-              <View style={[styles.scrollThumb, { height: thumbHeight, top: thumbTop }]} />
-            </View>
-          ) : null}
           </View>
-
-          {reachedEnd ? (
-            <Pressable
-              onPress={onClose}
-              android_ripple={{ color: "rgba(255,255,255,0.18)" }}
-              style={({ pressed }) => [styles.close, pressed && styles.pressed]}
-            >
-              <LinearGradient
-                colors={gradients.connect}
-                start={{ x: 0, y: 0.5 }}
-                end={{ x: 1, y: 0.5 }}
-                style={styles.closeGradient}
-              >
-                <Ionicons name="checkmark-circle" size={18} color="#FFFFFF" />
-                <Text style={styles.closeText}>Got it</Text>
-              </LinearGradient>
-            </Pressable>
-          ) : null}
         </View>
-      </View>
-    </Modal>
+      ))}
+
+      <Text style={styles.linksHeading}>Helpful links</Text>
+      {LINKS.map(renderLink)}
+    </ModalFrame>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return {
-    backdrop: {
-      flex: 1,
-      backgroundColor: colors.overlay,
-      alignItems: "center" as const,
-      justifyContent: "center" as const,
-      paddingHorizontal: 20,
+    header: {
+      gap: 8,
     },
-    card: {
-      width: "100%" as const,
-      backgroundColor: colors.card,
-      borderRadius: radius.lg,
-      padding: 20,
-      gap: 10,
-      borderWidth: 1,
-      borderColor: colors.border,
-      zIndex: 1,
-      elevation: 8,
+    titleRow: {
+      flexDirection: "row" as const,
+      alignItems: "center" as const,
+      justifyContent: "space-between" as const,
+      gap: 12,
     },
     title: {
       ...heading(600),
+      flex: 1,
+      minWidth: 0,
       color: colors.text,
       fontSize: 16,
       lineHeight: 23,
+    },
+    iconClose: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      alignItems: "center" as const,
+      justifyContent: "center" as const,
+      backgroundColor: colors.cardAlt,
+      borderWidth: 1,
+      borderColor: colors.border,
     },
     intro: {
       ...para(500),
@@ -282,38 +227,10 @@ function createStyles(colors: ThemeColors) {
       fontSize: 13,
       lineHeight: 18,
     },
-    scrollWrap: {
-      position: "relative" as const,
-      flexGrow: 0,
-      flexShrink: 1,
-    },
-    scroll: {
-      flexGrow: 0,
-      flexShrink: 1,
-    },
-    scrollContent: {
-      gap: 14,
-      paddingBottom: 4,
-      paddingRight: 12,
-    },
-    scrollTrack: {
-      position: "absolute" as const,
-      top: 0,
-      right: 0,
-      bottom: 0,
-      width: 5,
-      borderRadius: 3,
-      backgroundColor: colors.border,
-    },
-    scrollThumb: {
-      position: "absolute" as const,
-      left: 0,
-      width: 5,
-      borderRadius: 3,
-      backgroundColor: colors.blueSoft,
-    },
     stepRow: {
       flexDirection: "row" as const,
+      alignItems: "flex-start" as const,
+      alignSelf: "stretch" as const,
       gap: 12,
     },
     stepBadge: {
@@ -334,14 +251,15 @@ function createStyles(colors: ThemeColors) {
     },
     stepCopy: {
       flex: 1,
-      gap: 6,
+      flexShrink: 1,
       minWidth: 0,
+      gap: 6,
     },
     stepTitle: {
       ...heading(600),
       color: colors.text,
       fontSize: 14,
-      lineHeight: 23,
+      lineHeight: 20,
     },
     stepBody: {
       ...para(500),
@@ -351,8 +269,9 @@ function createStyles(colors: ThemeColors) {
     },
     bulletRow: {
       flexDirection: "row" as const,
-      gap: 8,
       alignItems: "flex-start" as const,
+      alignSelf: "stretch" as const,
+      gap: 8,
     },
     bulletDot: {
       width: 5,
@@ -362,11 +281,13 @@ function createStyles(colors: ThemeColors) {
       marginTop: 7,
     },
     bulletText: {
-      ...para(500),  
+      ...para(500),
       flex: 1,
+      flexShrink: 1,
+      minWidth: 0,
       color: colors.textMuted,
       fontSize: 13,
-      lineHeight: 19, 
+      lineHeight: 19,
     },
     linksHeading: {
       ...heading(),
@@ -377,6 +298,7 @@ function createStyles(colors: ThemeColors) {
     linkRow: {
       flexDirection: "row" as const,
       alignItems: "center" as const,
+      alignSelf: "stretch" as const,
       gap: 12,
       backgroundColor: colors.cardAlt,
       borderRadius: radius.md,
@@ -396,13 +318,14 @@ function createStyles(colors: ThemeColors) {
     linkCopy: {
       flex: 1,
       minWidth: 0,
+      flexShrink: 1,
       gap: 2,
     },
     linkTitle: {
       ...heading(600),
       color: colors.text,
       fontSize: 13,
-      lineHeight: 23,
+      lineHeight: 18,
     },
     linkSubtitle: {
       ...para(500),
@@ -410,8 +333,11 @@ function createStyles(colors: ThemeColors) {
       fontSize: 11,
       lineHeight: 16,
     },
+    footer: {
+      paddingTop: 4,
+      gap: 8,
+    },
     close: {
-      marginTop: 4,
       borderRadius: radius.md,
       overflow: "hidden" as const,
     },

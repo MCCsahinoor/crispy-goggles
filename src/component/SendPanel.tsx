@@ -9,7 +9,6 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  useWindowDimensions,
   View,
 } from "react-native";
 import QRCode from "react-native-qrcode-svg";
@@ -25,6 +24,7 @@ import {
   uploadFilesToPc,
   waitForPcReceive,
 } from "../lib/sendToPc";
+import { useLayout } from "../lib/responsive";
 import { gradients, heading, para, radius, useTheme, useThemedStyles, type ThemeColors } from "../theme";
 import { ConnectButton, OrDivider, StepLabel } from "./ui";
 
@@ -49,7 +49,7 @@ function mapPickedFiles(
 export default function SendPanel({ onToast }: SendPanelProps) {
   const { colors, scheme } = useTheme();
   const styles = useThemedStyles(createStyles);
-  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const layout = useLayout();
   const [step, setStep] = useState<SendStep>("pick");
   const [files, setFiles] = useState<SendFile[]>([]);
   const [session, setSession] = useState<SendSession | null>(null);
@@ -176,7 +176,7 @@ export default function SendPanel({ onToast }: SendPanelProps) {
 
   const qrColor = scheme === "dark" ? "#FFFFFF" : "#07080D";
   const qrBg = scheme === "dark" ? "#12141C" : "#FFFFFF";
-  const zoomedQrSize = Math.min(Math.min(windowWidth, windowHeight) - 48, 360);
+  const fileListMaxHeight = Math.max(120, Math.min(320, Math.round(layout.height * 0.28)));
 
   return (
     <View style={styles.panel}>
@@ -217,7 +217,7 @@ export default function SendPanel({ onToast }: SendPanelProps) {
         <>
           <StepLabel>{`Selected files (${files.length})`}</StepLabel>
           <ScrollView
-            style={styles.fileList}
+            style={[styles.fileList, { maxHeight: fileListMaxHeight }]}
             nestedScrollEnabled
             showsVerticalScrollIndicator
           >
@@ -263,7 +263,7 @@ export default function SendPanel({ onToast }: SendPanelProps) {
             accessibilityLabel="Zoom QR code"
             style={({ pressed }) => [styles.qrWrap, pressed && styles.pressed]}
           >
-            <QRCode value={session.qrValue} size={200} color={qrColor} backgroundColor={qrBg} />
+            <QRCode value={session.qrValue} size={layout.qrSize} color={qrColor} backgroundColor={qrBg} />
             <View style={styles.qrZoomBadge}>
               <Ionicons name="expand-outline" size={16} color={colors.textMuted} />
             </View>
@@ -349,6 +349,7 @@ export default function SendPanel({ onToast }: SendPanelProps) {
         visible={qrZoomed && !!session}
         animationType="fade"
         statusBarTranslucent
+        supportedOrientations={["portrait", "landscape"]}
         onRequestClose={() => setQrZoomed(false)}
       >
         <Pressable style={styles.qrZoomBackdrop} onPress={() => setQrZoomed(false)}>
@@ -356,7 +357,7 @@ export default function SendPanel({ onToast }: SendPanelProps) {
             {session ? (
               <QRCode
                 value={session.qrValue}
-                size={zoomedQrSize}
+                size={layout.qrZoomSize}
                 color={qrColor}
                 backgroundColor={qrBg}
               />
@@ -445,7 +446,7 @@ function createStyles(colors: ThemeColors) {
       lineHeight: 16,
     },
     fileList: {
-      maxHeight: 220,
+      flexGrow: 0,
     },
     fileRow: {
       flexDirection: "row",
