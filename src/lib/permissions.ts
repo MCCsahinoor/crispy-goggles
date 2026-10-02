@@ -9,6 +9,7 @@ import {
   type Permission,
 } from "react-native";
 
+import { t } from "../i18n";
 import { requestStoragePermission } from "./saveDownload";
 
 export type PermissionId = "camera" | "location" | "storage";
@@ -72,8 +73,8 @@ export async function getRequiredPermissions(): Promise<PermissionItem[]> {
   const items: PermissionItem[] = [
     {
       id: "camera",
-      title: "Camera",
-      subtitle: "Scan Share QR and Wi-Fi QR codes",
+      title: t("perm.camera.title"),
+      subtitle: t("perm.camera.subtitle"),
       granted: await getCameraGranted(),
     },
   ];
@@ -81,14 +82,14 @@ export async function getRequiredPermissions(): Promise<PermissionItem[]> {
   if (Platform.OS === "android") {
     items.push({
       id: "location",
-      title: "Location & nearby Wi-Fi",
-      subtitle: "Join the PC hotspot or Wi-Fi network",
+      title: t("perm.location.title"),
+      subtitle: t("perm.location.subtitle"),
       granted: await getLocationGranted(),
     });
     items.push({
       id: "storage",
-      title: "Storage",
-      subtitle: "Save downloaded files",
+      title: t("perm.storage.title"),
+      subtitle: t("perm.storage.subtitle"),
       granted: await getStorageGranted(),
     });
   }
@@ -159,10 +160,10 @@ export async function requestLocationPermission(): Promise<boolean> {
   const granted = await PermissionsAndroid.request(
     PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
     {
-      title: "Location Permission",
-      message: "Filora needs location access to connect to WiFi networks.",
-      buttonNegative: "Cancel",
-      buttonPositive: "OK",
+      title: t("perm.locationDialogTitle"),
+      message: t("perm.locationDialogMessage"),
+      buttonNegative: t("common.cancel"),
+      buttonPositive: t("common.ok"),
     },
   );
 
@@ -183,10 +184,10 @@ export async function requestLocationPermission(): Promise<boolean> {
 
 function promptOpenSettings(message: string): Promise<void> {
   return new Promise((resolve) => {
-    Alert.alert("Permission needed", message, [
-      { text: "Not now", style: "cancel", onPress: () => resolve() },
+    Alert.alert(t("perm.needed"), message, [
+      { text: t("common.notNow"), style: "cancel", onPress: () => resolve() },
       {
-        text: "Open settings",
+        text: t("common.openSettings"),
         onPress: () => {
           openAppInfo().finally(() => resolve());
         },
@@ -202,7 +203,7 @@ export async function requestAppPermission(id: PermissionId): Promise<boolean> {
       return true;
     }
     if (!result.canAskAgain) {
-      await promptOpenSettings("Camera permission is turned off. Enable it in system settings.");
+      await promptOpenSettings(t("perm.cameraOff"));
     }
     return false;
   }
@@ -213,7 +214,7 @@ export async function requestAppPermission(id: PermissionId): Promise<boolean> {
 
   const granted = await requestStoragePermission();
   if (!granted) {
-    await promptOpenSettings("Storage permission is turned off. Enable it in system settings.");
+    await promptOpenSettings(t("perm.storageOff"));
   }
   return granted;
 }

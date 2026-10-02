@@ -36,7 +36,7 @@ import SettingsPanel from "./src/component/SettingsPanel";
 import {
   ConnectionMode,
   downloadUrl,
-  FILEDROP_UNREACHABLE_MESSAGE,
+  getUnreachableMessage,
   fetchFiles,
   fetchSessionInfo,
   parseShareUrl,
@@ -49,6 +49,7 @@ import {
   authHeaders,
   WifiCredentials,
 } from "./src/lib/filedrop";
+import { I18nProvider, t, useI18n } from "./src/i18n";
 import { useInAppUpdates } from "./src/hooks/useInAppUpdates";
 import { useMobileAds } from "./src/hooks/useMobileAds";
 import { useAppInterstitial } from "./src/hooks/useAppInterstitial";
@@ -63,6 +64,8 @@ import { saveFileToAppFolder } from "./src/lib/saveDownload";
 import {
   gradients,
   heading,
+  latinHeading,
+  latinPara,
   para,
   radius,
   ThemeProvider,
@@ -79,15 +82,18 @@ const TOAST_DURATION_MS = 3000;
 
 export default function App() {
   return (
-    <FontProvider>
-      <ThemeProvider>
-        <AppShell />
-      </ThemeProvider>
-    </FontProvider>
+    <I18nProvider>
+      <FontProvider>
+        <ThemeProvider>
+          <AppShell />
+        </ThemeProvider>
+      </FontProvider>
+    </I18nProvider>
   );
 }
 
 function AppShell() {
+  useI18n(); // re-render on language change
   useInAppUpdates();
   useMobileAds();
   const showInterstitial = useAppInterstitial();
@@ -189,7 +195,7 @@ function AppShell() {
     async (active: ShareConnection, token?: string | null, manageLoading = true) => {
       if (manageLoading) {
         setLoading(true);
-        setBusyMessage("Loading files...");
+        setBusyMessage(t("connect.loadingFiles"));
       }
       clearToast();
       try {
@@ -200,11 +206,11 @@ function AppShell() {
         if (error instanceof Error && error.message === "PASSWORD_REQUIRED") {
           setScreen("password");
           if (token) {
-            showToast("Could not unlock. Check the password and try again.");
+            showToast(t("connect.unlockCheckPassword"));
           }
           return;
         }
-        showToast(error instanceof Error ? error.message : "Something went wrong.");
+        showToast(error instanceof Error ? error.message : t("connect.somethingWrong"));
       } finally {
         if (manageLoading) {
           setLoading(false);
@@ -224,7 +230,7 @@ function AppShell() {
       }
 
       setLoading(true);
-      setBusyMessage("Connecting...");
+      setBusyMessage(t("connect.connecting"));
       clearToast();
       setLocalConnectError("");
       if (rawUrl) {
@@ -242,8 +248,9 @@ function AppShell() {
           !(connectionMode === "global" && !isLocalConnection(parsed))
         ) {
           showToast(
-            `PC is in ${info.share_mode === "global" ? "Global link" : "Local network"} mode. ` +
-            `Switch the app to match Filora on your PC.`,
+            t("connect.pcModeMismatch", {
+              mode: info.share_mode === "global" ? t("mode.global") : t("mode.local"),
+            }),
           );
           setConnection(null);
           return;
@@ -257,9 +264,9 @@ function AppShell() {
       } catch (error) {
         setConnection(null);
         if (connectionMode === "local") {
-          setLocalConnectError(FILEDROP_UNREACHABLE_MESSAGE);
+          setLocalConnectError(getUnreachableMessage(true));
         } else {
-          showToast(error instanceof Error ? error.message : "Could not connect.");
+          showToast(error instanceof Error ? error.message : t("connect.couldNotConnect"));
         }
       } finally {
         setLoading(false);
@@ -275,8 +282,8 @@ function AppShell() {
       if (!parsed) {
         showToast(
           connectionMode === "local"
-            ? "Paste a local link like http://192.168.137.1:8765/s/9GEL16siviA or scan Share QR."
-            : "Paste a valid Filora global link or scan the Share QR.",
+            ? t("connect.pasteLocalHint")
+            : t("connect.pasteGlobalHint"),
         );
         return;
       }
@@ -290,14 +297,14 @@ function AppShell() {
       return;
     }
     setLoading(true);
-    setBusyMessage("Unlocking...");
+    setBusyMessage(t("connect.unlocking"));
     clearToast();
     try {
       const token = await unlockSession(connection, password);
       setAuthToken(token);
       await loadFiles(connection, token, false);
     } catch (error) {
-      showToast(error instanceof Error ? error.message : "Unlock failed.");
+      showToast(error instanceof Error ? error.message : t("connect.unlockFailed"));
     } finally {
       setLoading(false);
       setBusyMessage("");
@@ -323,11 +330,11 @@ function AppShell() {
         );
         showToast(
           saved.publicCopy
-            ? `Saved to Documents/Filora/${saved.fileName}`
-            : `Saved to app Filora folder/${saved.fileName}`,
+            ? t("connect.savedPublic", { file: saved.fileName })
+            : t("connect.savedApp", { file: saved.fileName }),
         );
       } catch (error) {
-        showToast(error instanceof Error ? error.message : "Download failed.");
+        showToast(error instanceof Error ? error.message : t("connect.downloadFailed"));
       } finally {
         setSavingFileId(null);
       }
@@ -345,11 +352,11 @@ function AppShell() {
       if (isWifiScan) {
         const wifi = parseWifiQr(data);
         if (!wifi) {
-          showToast(`Invalid Wi-Fi QR format. Scanned: ${data.slice(0, 50)}`);
+          showToast(t("connect.invalidWifiQr", { data: data.slice(0, 50) }));
           return;
         }
         setWifiDetails(wifi);
-        showToast(`Join "${wifi.ssid}" in phone Wi-Fi settings, then scan the Share QR.`);
+        showToast(t("connect.joinWifi", { ssid: wifi.ssid }));
         return;
       }
 
@@ -378,12 +385,12 @@ function AppShell() {
     try {
       const permissionGranted = await requestLocationPermission();
       if (!permissionGranted) {
-        showToast("Allow location for Filora in App permissions, then try again.");
+        showToast(t("connect.allowLocationInSettings"));
         return;
       }
       const enabled = await enableLocationServices();
       if (!enabled) {
-        showToast("Location is still off. Turn it on to join Wi-Fi automatically.");
+        showToast(t("connect.locationStillOff"));
         return;
       }
       setLocationModalOpen(false);
@@ -411,7 +418,7 @@ function AppShell() {
         if (!permission?.granted) {
           const result = await requestPermission();
           if (!result.granted) {
-            showToast("Camera permission is required to scan QR codes.");
+            showToast(t("connect.cameraRequired"));
             return;
           }
         }
@@ -438,7 +445,7 @@ function AppShell() {
       clearToast();
       return;
     }
-    showToast("Nothing to paste from clipboard.");
+    showToast(t("connect.nothingToPaste"));
   }, [clearToast, showToast]);
 
   const performWifiConnect = useCallback(async () => {
@@ -454,12 +461,12 @@ function AppShell() {
     try {
       const isEnabled = await WifiManager.isEnabled();
       if (!isEnabled) {
-        showToast("Enabling WiFi...");
+        showToast(t("connect.enablingWifi"));
         await WifiManager.setEnabled(true);
         await new Promise((resolve) => setTimeout(resolve, 2000));
       }
 
-      showToast(`Connecting to ${wifiDetails.ssid}...`);
+      showToast(t("connect.connectingTo", { ssid: wifiDetails.ssid }));
 
       try {
         await WifiManager.disconnect();
@@ -477,18 +484,18 @@ function AppShell() {
       await new Promise((resolve) => setTimeout(resolve, 3000));
       const currentSSID = await WifiManager.getCurrentWifiSSID();
       if (currentSSID === wifiDetails.ssid) {
-        showToast(`Connected to ${wifiDetails.ssid}! Now scan Share QR.`);
+        showToast(t("connect.connectedTo", { ssid: wifiDetails.ssid }));
       } else {
-        showToast("Connection initiated. Check WiFi settings if not connected.");
+        showToast(t("connect.connectionInitiated"));
       }
     } catch (error) {
-      const msg = error instanceof Error ? error.message : "Connection failed";
+      const msg = error instanceof Error ? error.message : t("connect.connectionFailed");
       if (msg.toLowerCase().includes("location service")) {
         pendingLocationActionRef.current = performWifiConnect;
         setLocationModalOpen(true);
         return;
       }
-      showToast(`WiFi error: ${msg}. Opening settings...`);
+      showToast(t("connect.wifiError", { msg }));
       setTimeout(() => {
         Linking.sendIntent("android.settings.WIFI_SETTINGS");
       }, 1500);
@@ -504,10 +511,10 @@ function AppShell() {
 
   const scanTitle =
     scanPurpose === "wifi"
-      ? "Scan Wi-Fi QR from Filora Desktop"
+      ? t("scan.wifiTitle")
       : connectionMode === "local"
-        ? "Scan local Share QR from Filora Desktop"
-        : "Scan Filora Share QR";
+        ? t("scan.localShareTitle")
+        : t("scan.shareTitle");
 
   const glowColor =
     connectionMode === "local" ? "rgba(168,85,247,0.16)" : "rgba(59,130,246,0.16)";
@@ -540,7 +547,7 @@ function AppShell() {
           >
             <Text style={[styles.scanTitle, { maxWidth: layout.contentMaxWidth }]}>{scanTitle}</Text>
             <Pressable style={({ pressed }) => [styles.scanCancel, pressed && styles.pressed]} onPress={() => setScanning(false)} >
-              <Text style={styles.scanCancelText}>Cancel</Text>
+              <Text style={styles.scanCancelText}>{t("common.cancel")}</Text>
             </Pressable>
           </SafeAreaView>
         </View>
@@ -565,7 +572,7 @@ function AppShell() {
             {screen === "files" ? (
               <View style={styles.connectedBadge}>
                 <View style={styles.connectedDot} />
-                <Text style={styles.connectedBadgeText}>Connected</Text>
+                <Text style={styles.connectedBadgeText}>{t("ui.connected")}</Text>
               </View>
             ) : (
               <Pressable onPress={() => setHelpOpen(true)} hitSlop={10} style={({ pressed }) => pressed && styles.pressed} >
@@ -586,7 +593,7 @@ function AppShell() {
                     }}
                   >
                     <Ionicons name="globe-outline" size={16} color={connectionMode === "global" ? colors.blueSoft : colors.textDim} />
-                    <Text style={[styles.modeTabText, connectionMode === "global" && styles.modeTabTextGlobal]}> Global link </Text>
+                    <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75} style={[styles.modeTabText, connectionMode === "global" && styles.modeTabTextGlobal]}>{t("mode.global")}</Text>
                   </Pressable>
                   <Pressable style={[styles.modeTab, connectionMode === "local" && styles.modeTabLocal]}
                     onPress={() => {
@@ -596,7 +603,7 @@ function AppShell() {
                     }}
                   >
                     <Ionicons name="wifi" size={16} color={connectionMode === "local" ? colors.purpleSoft : colors.textDim} />
-                    <Text style={[styles.modeTabText, connectionMode === "local" && styles.modeTabTextLocal]} > Local network </Text>
+                    <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75} style={[styles.modeTabText, connectionMode === "local" && styles.modeTabTextLocal]}>{t("mode.local")}</Text>
                   </Pressable>
                 </View>
               )}
@@ -661,11 +668,11 @@ function AppShell() {
           {screen === "password" && (
             <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} >
               <View style={styles.panel}>
-                <Text style={styles.label}>Access password</Text>
+                <Text style={styles.label}>{t("connect.accessPassword")}</Text>
                 <TextInput
                   value={password}
                   onChangeText={setPassword}
-                  placeholder="Enter password from PC"
+                  placeholder={t("connect.passwordPlaceholder")}
                   placeholderTextColor={colors.textDim}
                   secureTextEntry
                   style={styles.input}
@@ -680,7 +687,7 @@ function AppShell() {
                   disabled={loading}
                 >
                   <LinearGradient colors={gradients.connect} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={styles.unlockGradient} >
-                    <Text style={styles.unlockText}>Unlock files</Text>
+                    <Text style={styles.unlockText}>{t("connect.unlockFiles")}</Text>
                   </LinearGradient>
                 </Pressable>
                 <Pressable style={styles.linkButton}
@@ -691,7 +698,7 @@ function AppShell() {
                     })();
                   }}
                 >
-                  <Text style={styles.linkButtonText}>Use another link</Text>
+                  <Text style={styles.linkButtonText}>{t("connect.useAnotherLink")}</Text>
                 </Pressable>
               </View>
 
@@ -736,7 +743,7 @@ function AppShell() {
                     }}
                   >
                     <Ionicons name="cloud-download-outline" size={18} color={homeTab === "connect" ? colors.blueSoft : colors.textMuted} />
-                    <Text style={[styles.bottomItemText, homeTab === "connect" && styles.bottomItemTextActive]}> Received </Text>
+                    <Text style={[styles.bottomItemText, homeTab === "connect" && styles.bottomItemTextActive]}>{t("tab.received")}</Text>
                   </Pressable>
                   <View style={styles.bottomDivider} />
                   <Pressable
@@ -747,7 +754,7 @@ function AppShell() {
                     }}
                   >
                     <Ionicons name="cloud-upload-outline" size={18} color={homeTab === "send" ? colors.purpleSoft : colors.textMuted} />
-                    <Text style={[styles.bottomItemText, homeTab === "send" && styles.bottomItemTextActive]}> Send </Text>
+                    <Text style={[styles.bottomItemText, homeTab === "send" && styles.bottomItemTextActive]}>{t("tab.send")}</Text>
                   </Pressable>
                   <View style={styles.bottomDivider} />
                   {/* <Pressable style={({ pressed }) => [styles.bottomItem, pressed && styles.pressed]} onPress={() => setHomeTab("history")} >
@@ -760,7 +767,7 @@ function AppShell() {
                     onPress={() => setHomeTab("settings")}
                   >
                     <Ionicons name="settings-outline" size={18} color={homeTab === "settings" ? colors.purpleSoft : colors.textMuted} />
-                    <Text style={[styles.bottomItemText, homeTab === "settings" && styles.bottomItemTextActive]}> Settings </Text>
+                    <Text style={[styles.bottomItemText, homeTab === "settings" && styles.bottomItemTextActive]}>{t("tab.settings")}</Text>
                   </Pressable>
                 </View>
               </View>
@@ -792,7 +799,7 @@ function AppShell() {
         <View style={styles.overlayLoaderBackdrop}>
           <View style={[styles.loaderCard, { maxWidth: layout.modalMaxWidth }]}>
             <ActivityIndicator size="large" color={colors.blueSoft} />
-            <Text style={styles.loaderText}>{busyMessage || "Working..."}</Text>
+            <Text style={styles.loaderText}>{busyMessage || t("common.working")}</Text>
           </View>
         </View>
       </Modal>
@@ -856,13 +863,13 @@ function createStyles(colors: ThemeColors) {
       flex: 1,
     },
     title: {
-      ...heading(),
+      ...latinHeading(),
       fontSize: 18,
       color: colors.text, 
       lineHeight: 23,
     },
     subtitle: {
-      ...para(500), 
+      ...latinPara(500),
       fontSize: 10,
       lineHeight: 14,
       color: colors.textMuted,
@@ -893,7 +900,7 @@ function createStyles(colors: ThemeColors) {
     modeRow: {
       flexDirection: "row",
       backgroundColor: colors.bgElevated,
-      borderRadius: radius.lg,
+      borderRadius: radius.xl,
       padding: 4,
       marginBottom: 12,
       borderWidth: 1,
@@ -902,9 +909,11 @@ function createStyles(colors: ThemeColors) {
     },
     modeTab: {
       flex: 1,
+      minWidth: 0,
+      paddingHorizontal: 8,
       flexDirection: "row",
       borderRadius: radius.md,
-      paddingVertical: 10,
+      paddingVertical: 5,
       alignItems: "center",
       justifyContent: "center",
       gap: 6,
@@ -924,6 +933,7 @@ function createStyles(colors: ThemeColors) {
     },
     modeTabText: {
       ...para(700),
+      flexShrink: 1,
       color: colors.textDim,
       fontSize: 13,
       lineHeight: 18,

@@ -1,5 +1,7 @@
 import TcpSocket from "react-native-tcp-socket";
 
+import { t } from "../i18n";
+
 export const PHONE_CONNECT_PORT = 8766;
 const CONNECT_PORTS = [8766, 8767, 8768, 18766];
 
@@ -173,11 +175,11 @@ export async function startDesktopConnectListener(expectedToken: string): Promis
       listenError = null;
       break;
     } catch (error) {
-      listenError = error instanceof Error ? error : new Error("Could not listen.");
+      listenError = error instanceof Error ? error : new Error(t("sendErr.couldNotListen"));
     }
   }
   if (!server) {
-    throw listenError || new Error("Could not listen for the desktop connection.");
+    throw listenError || new Error(t("sendErr.couldNotListenDesktop"));
   }
 
   const stop = () => {

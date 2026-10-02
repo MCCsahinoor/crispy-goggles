@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { AppState, Platform, Pressable, StyleSheet, View } from "react-native";
 import WifiManager from "react-native-wifi-reborn";
 
+import { t } from "../i18n";
 import { Text } from "../lib/disableFontScaling";
 
 import { WifiCredentials } from "../lib/filedrop";
@@ -31,7 +32,7 @@ type LocalConnectPanelProps = {
 
 function maskPassword(password: string): string {
   if (!password) {
-    return "(none)";
+    return t("local.passwordNone");
   }
   if (password.length <= 4) {
     return password;
@@ -104,20 +105,18 @@ export default function LocalConnectPanel({
       <View style={styles.heroRow}>
         <RouterHero compact />
         <View style={styles.heroCopy}>
-          <Text style={styles.heroTitle}>Local network mode</Text>
-          <Text style={styles.heroText}>
-            Use when Filora Desktop is in Local network mode. Join the PC hotspot or same Wi-Fi.
-          </Text>
+          <Text style={styles.heroTitle}>{t("local.title")}</Text>
+          <Text style={styles.heroText}>{t("local.body")}</Text>
         </View>
       </View>
 
       <View style={styles.stepBlock}>
-        <StepLabel>Step 1 — Join PC network</StepLabel>
+        <StepLabel>{t("local.step1")}</StepLabel>
         <ScanActionCard
           icon="wifi-outline"
           iconColor={colors.purpleSoft}
-          title="Scan Wi-Fi QR"
-          subtitle="Scan the QR to join PC network."
+          title={t("local.scanWifiTitle")}
+          subtitle={t("local.scanWifiSubtitle")}
           onPress={onScanWifi}
           disabled={loading}
         />
@@ -125,7 +124,7 @@ export default function LocalConnectPanel({
           (isConnectedToTargetWifi ? (
             <View style={styles.wifiConnectedBox}>
               <Ionicons name="checkmark-circle" size={18} color={colors.success} />
-              <Text style={styles.wifiConnectedText}>{wifiDetails.ssid} network connected</Text>
+              <Text style={styles.wifiConnectedText}>{t("local.networkConnected", { ssid: wifiDetails.ssid })}</Text>
             </View>
           ) : (
             <View style={styles.wifiBox}>
@@ -145,19 +144,19 @@ export default function LocalConnectPanel({
                 style={({ pressed }) => [styles.linkButton, pressed && styles.pressed]}
                 onPress={handleConnectToWifi}
               >
-                <Text style={styles.linkButtonText}>Connect to {wifiDetails.ssid}</Text>
+                <Text style={styles.linkButtonText}>{t("local.connectToSsid", { ssid: wifiDetails.ssid })}</Text>
               </Pressable>
             </View>
           ))}
       </View>
 
       <View style={styles.stepBlock}>
-        <StepLabel>Step 2 — Connect to PC</StepLabel>
+        <StepLabel>{t("local.step2")}</StepLabel>
         <ScanActionCard
           icon="qr-code-outline"
           iconColor={colors.purpleSoft}
-          title="Scan Share QR"
-          subtitle="Scan the QR from Filora Desktop."
+          title={t("scanCard.shareTitle")}
+          subtitle={t("local.scanShareSubtitle")}
           onPress={onScanShare}
           disabled={loading}
         />

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { t } from "../i18n";
 import { useLayout } from "../lib/responsive";
 import { radius, useThemedStyles, type ThemeColors } from "../theme";
 
@@ -37,7 +38,7 @@ export default function ModalFrame({
   dismissOnBackdrop = true,
   gap = 10,
   cardStyle,
-  accessibilityLabel = "Close dialog",
+  accessibilityLabel = t("common.close"),
 }: ModalFrameProps) {
   const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();

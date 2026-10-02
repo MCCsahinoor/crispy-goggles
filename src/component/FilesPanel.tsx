@@ -8,6 +8,7 @@ import {
   View,
 } from "react-native";
 
+import { t, tn } from "../i18n";
 import { Text } from "../lib/disableFontScaling";
 
 import { ConnectionMode, SharedFile } from "../lib/filedrop";
@@ -81,10 +82,10 @@ export default function FilesPanel({
       <View style={styles.card}>
         <View style={styles.filesHeader}>
           <View style={styles.filesHeaderLeft}>
-            <Text style={styles.filesTitle}>Shared files</Text>
+            <Text style={styles.filesTitle}>{t("files.title")}</Text>
             <View style={styles.modeBadge}>
               <Text style={styles.modeBadgeText}>
-                {connectionMode === "local" ? "Local" : "Global"}
+                {connectionMode === "local" ? t("mode.localShort") : t("mode.globalShort")}
               </Text>
             </View>
           </View>
@@ -93,7 +94,7 @@ export default function FilesPanel({
             onPress={onRefresh}
             disabled={loading}
           >
-            <Text style={styles.iconButtonText}>Refresh</Text>
+            <Text style={styles.iconButtonText}>{t("common.refresh")}</Text>
           </Pressable>
         </View>
 
@@ -108,9 +109,7 @@ export default function FilesPanel({
           </Pressable>
         )}
 
-        <Text style={styles.filesCount}>
-          {files.length} {files.length === 1 ? "file" : "files"} available
-        </Text>
+        <Text style={styles.filesCount}>{tn("files.available", files.length)}</Text>
 
         <FlatList
           style={styles.fileList}
@@ -121,8 +120,8 @@ export default function FilesPanel({
           ItemSeparatorComponent={() => <View style={styles.separator} />}
           ListEmptyComponent={
             <View style={styles.emptyState}>
-              <Text style={styles.emptyTitle}>No files yet</Text>
-              <Text style={styles.emptyText}>Add files on the PC, then tap Refresh.</Text>
+              <Text style={styles.emptyTitle}>{t("files.emptyTitle")}</Text>
+              <Text style={styles.emptyText}>{t("files.emptyBody")}</Text>
             </View>
           }
           renderItem={({ item }) => {
@@ -147,7 +146,7 @@ export default function FilesPanel({
                   <ActivityIndicator size="small" color={colors.blueSoft} />
                 ) : (
                   <View style={styles.downloadPill}>
-                    <Text style={styles.downloadPillText}>Save</Text>
+                    <Text style={styles.downloadPillText}>{t("common.save")}</Text>
                   </View>
                 )}
               </Pressable>
@@ -170,7 +169,7 @@ export default function FilesPanel({
             style={({ pressed }) => [styles.disconnectButton, pressed && styles.pressed]}
             onPress={onDisconnect}
           >
-            <Text style={styles.disconnectButtonText}>Disconnect</Text>
+            <Text style={styles.disconnectButtonText}>{t("files.disconnect")}</Text>
           </Pressable>
         </View>
       </View>

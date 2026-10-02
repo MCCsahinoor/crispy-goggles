@@ -1,6 +1,7 @@
 import * as FileSystem from "expo-file-system/legacy";
 import { Alert, PermissionsAndroid, Platform } from "react-native";
 
+import { t } from "../i18n";
 import { withLocalWifiRoute } from "./filedrop";
 
 export const APP_DOWNLOAD_FOLDER = "Filora";
@@ -224,7 +225,7 @@ async function uniqueLocalPath(folderUri: string, fileName: string): Promise<str
 async function ensureAppFileDropFolder(): Promise<string> {
   const root = FileSystem.documentDirectory;
   if (!root) {
-    throw new Error("Device storage is not available.");
+    throw new Error(t("save.storageUnavailable"));
   }
   const folderUri = `${root}${APP_DOWNLOAD_FOLDER}/`;
   const info = await FileSystem.getInfoAsync(folderUri);
@@ -253,7 +254,7 @@ export async function requestStoragePermission(): Promise<boolean> {
         PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
       ]),
       PERMISSION_TIMEOUT_MS,
-      "Storage permission request timed out.",
+      t("save.permissionTimeout"),
     );
     return (
       result[PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE] === PermissionsAndroid.RESULTS.GRANTED ||
@@ -335,7 +336,7 @@ export async function changeDownloadFolder(): Promise<string | null> {
   const permission = await withTimeout(
     FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync(initial),
     PERMISSION_TIMEOUT_MS,
-    "Folder access timed out. Try again and pick Documents → Filora.",
+    t("save.folderTimeoutChange"),
   );
   if (!permission.granted) {
     return null;
@@ -373,11 +374,11 @@ function confirmDocumentsFolder(onAwaitingUser?: () => void): Promise<boolean> {
   return new Promise((resolve) => {
     onAwaitingUser?.();
     Alert.alert(
-      "Allow Filora folder",
-      "Tap Allow for storage. If a folder screen opens, open Documents (not Download), then tap USE THIS FOLDER. Filora will be created automatically.",
+      t("save.allowFolderTitle"),
+      t("save.allowFolderBody"),
       [
-        { text: "Cancel", style: "cancel", onPress: () => resolve(false) },
-        { text: "Allow", onPress: () => resolve(true) },
+        { text: t("common.cancel"), style: "cancel", onPress: () => resolve(false) },
+        { text: t("common.allow"), onPress: () => resolve(true) },
       ],
       { cancelable: true, onDismiss: () => resolve(false) },
     );
@@ -403,7 +404,7 @@ async function ensurePublicFileDropFolder(onAwaitingUser?: () => void): Promise<
   const permission = await withTimeout(
     FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync(initial),
     PERMISSION_TIMEOUT_MS,
-    "Folder access timed out. Try Save again and pick Documents → Filora.",
+    t("save.folderTimeoutSave"),
   );
   if (!permission.granted) {
     return null;
@@ -463,25 +464,25 @@ export async function saveFileToAppFolder(
     withTimeout(
       FileSystem.downloadAsync(url, destination, { headers }),
       DOWNLOAD_TIMEOUT_MS,
-      "Download timed out. Check your connection and try again.",
+      t("save.downloadTimeout"),
     ),
   );
   if (result.status && result.status >= 400) {
-    throw new Error(`Download failed (HTTP ${result.status}).`);
+    throw new Error(t("save.downloadHttp", { status: result.status }));
   }
   // Redirects (3xx) are not followed by downloadAsync; treat as failure.
   if (result.status && result.status >= 300 && result.status < 400) {
-    throw new Error("Download was redirected. Please try scanning the QR code again.");
+    throw new Error(t("save.downloadRedirected"));
   }
 
   const written = await FileSystem.getInfoAsync(result.uri);
   if (!written.exists) {
-    throw new Error("The file could not be saved to the Filora folder.");
+    throw new Error(t("save.couldNotSave"));
   }
   // Check that the download has content.
   if (written.size === 0) {
     await FileSystem.deleteAsync(result.uri, { idempotent: true });
-    throw new Error("Download returned empty file. Check connection and try again.");
+    throw new Error(t("save.emptyFile"));
   }
 
   let publicCopy = false;

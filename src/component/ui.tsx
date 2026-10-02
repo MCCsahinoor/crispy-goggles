@@ -2,6 +2,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Pressable, StyleSheet, View } from "react-native";
 
+import { t } from "../i18n";
 import { Text, TextInput } from "../lib/disableFontScaling";
 
 import { gradients, heading, para, radius, useTheme, useThemedStyles, type ThemeColors } from "../theme";
@@ -64,13 +65,13 @@ export function ShareLinkField({
   return (
     <View style={styles.shareBlock}>
       <View style={styles.shareHeader}>
-        <Text style={styles.sectionLabel}>Share link</Text>
+        <Text style={styles.sectionLabel}>{t("ui.shareLink")}</Text>
         <Pressable
           onPress={onPaste}
           style={({ pressed }) => [styles.pasteButton, pressed && styles.pressed]}
         >
           <Ionicons name="clipboard-outline" size={14} color={colors.purpleSoft} />
-          <Text style={styles.pasteText}>Paste URL</Text>
+          <Text style={styles.pasteText}>{t("ui.pasteUrl")}</Text>
         </Pressable>
       </View>
       <View style={styles.inputWrap}>
@@ -95,7 +96,7 @@ type ConnectButtonProps = {
   label?: string;
 };
 
-export function ConnectButton({ onPress, disabled, label = "Connect" }: ConnectButtonProps) {
+export function ConnectButton({ onPress, disabled, label = t("common.connect") }: ConnectButtonProps) {
   const styles = useThemedStyles(createUiStyles);
 
   return (
@@ -129,7 +130,7 @@ export function OrDivider() {
   return (
     <View style={styles.orRow}>
       <View style={styles.orLine} />
-      <Text style={styles.orText}>OR</Text>
+      <Text style={styles.orText}>{t("common.or")}</Text>
       <View style={styles.orLine} />
     </View>
   );

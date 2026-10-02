@@ -1,6 +1,8 @@
 import { Platform } from "react-native";
 import WifiManager from "react-native-wifi-reborn";
 
+import { t } from "../i18n";
+
 export type ConnectionMode = "global" | "local";
 
 export type ShareConnection = {
@@ -31,8 +33,10 @@ export type WifiCredentials = {
   security: string;
 };
 
-export const FILEDROP_UNREACHABLE_MESSAGE =
-  "Could not reach Filora. The link works in your browser but the app needs a rebuild to allow local HTTP. Run: npm run android. Also check Filora.exe is running and Windows Firewall allows port 8765.";
+/** Message shown when the PC can't be reached. `local` picks the local-network variant. */
+export function getUnreachableMessage(local: boolean): string {
+  return local ? t("net.unreachableLocal") : t("net.unreachableGlobal");
+}
 
 let localWifiRouteDepth = 0;
 
@@ -332,9 +336,9 @@ async function requestOnce(
     } catch (error) {
       clearTimeout(timer);
       if (error instanceof Error && error.name === "AbortError") {
-        lastError = new Error("Timed out reaching Filora. Check that the PC app is still running.");
+        lastError = new Error(t("net.timeout"));
       } else {
-        lastError = new Error(FILEDROP_UNREACHABLE_MESSAGE);
+        lastError = new Error(getUnreachableMessage(true));
       }
 
       if (attempt < MAX_RETRIES - 1) {
@@ -343,7 +347,7 @@ async function requestOnce(
     }
   }
 
-  throw lastError || new Error(FILEDROP_UNREACHABLE_MESSAGE);
+  throw lastError || new Error(getUnreachableMessage(true));
 }
 
 async function request(
@@ -416,9 +420,7 @@ function parseFilesFromHtml(html: string): SharedFile[] {
 }
 
 function reachError(connection: ShareConnection, extra?: string): Error {
-  const base = isLocalConnection(connection)
-    ? FILEDROP_UNREACHABLE_MESSAGE
-    : "Could not reach Filora. Use a fresh Global link from Filora.exe (Restart sharing if the old link expired).";
+  const base = getUnreachableMessage(isLocalConnection(connection));
   return new Error(extra ? `${base} ${extra}` : base);
 }
 
@@ -439,7 +441,7 @@ export async function fetchSessionInfo(
 
       if (body.json) {
         if (response.status === 404) {
-          lastError = reachError(connection, "Session not found.");
+          lastError = reachError(connection, t("net.sessionNotFound"));
           continue;
         }
         return {
@@ -454,9 +456,7 @@ export async function fetchSessionInfo(
 
       if (body.html) {
         if (isCloudflareChallenge(body.html)) {
-          throw new Error(
-            "Cloudflare blocked the app request. Wait a few seconds, then try the link again.",
-          );
+          throw new Error(t("net.cloudflareBlocked"));
         }
         if (response.ok && isFileDropHtml(body.html)) {
           return {
@@ -517,16 +517,16 @@ export async function fetchFiles(
         }
       }
 
-      lastError = new Error("Could not load files from Filora.");
+      lastError = new Error(t("net.couldNotLoadFiles"));
     } catch (error) {
       if (error instanceof Error && error.message === "PASSWORD_REQUIRED") {
         throw error;
       }
-      lastError = error instanceof Error ? error : new Error("Could not load files from Filora.");
+      lastError = error instanceof Error ? error : new Error(t("net.couldNotLoadFiles"));
     }
   }
 
-  throw lastError || new Error("Could not load files from Filora.");
+  throw lastError || new Error(t("net.couldNotLoadFiles"));
 }
 
 export async function unlockSession(
@@ -535,7 +535,7 @@ export async function unlockSession(
 ): Promise<string | null> {
   const cleaned = password.trim();
   if (!cleaned) {
-    throw new Error("Enter the access password from Filora on your PC.");
+    throw new Error(t("net.enterPassword"));
   }
 
   try {
@@ -549,13 +549,13 @@ export async function unlockSession(
     });
     const jsonBody = await readBody(jsonResponse);
     if (jsonResponse.status === 401) {
-      throw new Error("Wrong password.");
+      throw new Error(t("net.wrongPassword"));
     }
     if (jsonBody.json?.ok || jsonBody.json?.auth_token) {
       return jsonBody.json.auth_token ?? null;
     }
   } catch (error) {
-    if (error instanceof Error && error.message === "Wrong password.") {
+    if (error instanceof Error && error.message === t("net.wrongPassword")) {
       throw error;
     }
   }
@@ -571,10 +571,10 @@ export async function unlockSession(
   });
   const body = await readBody(response);
   if (response.status === 401 || (body.html && htmlNeedsPassword(body.html) && body.html.toLowerCase().includes("wrong"))) {
-    throw new Error("Wrong password.");
+    throw new Error(t("net.wrongPassword"));
   }
   if (!response.ok && response.status !== 303) {
-    throw new Error("Could not unlock Filora session.");
+    throw new Error(t("net.couldNotUnlock"));
   }
   return null;
 }
@@ -592,10 +592,10 @@ export function validateModeForConnection(
 ): string | null {
   const local = isLocalConnection(connection);
   if (mode === "local" && !local) {
-    return "This is a global link. Use Global link mode, or scan the local Share QR from Filora.";
+    return t("net.modeGlobalLink");
   }
   if (mode === "global" && local) {
-    return "This is a local network link. Switch to Local network mode on the app and PC.";
+    return t("net.modeLocalLink");
   }
   return null;
 }

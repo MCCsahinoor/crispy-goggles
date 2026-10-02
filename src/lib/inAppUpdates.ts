@@ -2,6 +2,8 @@ import Constants from "expo-constants";
 import * as ExpoInAppUpdates from "expo-in-app-updates";
 import { Alert, Platform } from "react-native";
 
+import { t } from "../i18n";
+
 export type AppUpdateInfo = Awaited<ReturnType<typeof ExpoInAppUpdates.checkForUpdate>>;
 
 export function getAppVersion(): string {
@@ -23,23 +25,23 @@ export async function startAppUpdate(immediate?: boolean): Promise<boolean> {
 function updateMessage(storeVersion?: string): string {
   const current = getAppVersion();
   if (storeVersion) {
-    return `Version ${storeVersion} is available. You're on ${current}.`;
+    return t("update.availableVersion", { store: storeVersion, current });
   }
-  return "A new version of Filora is available with improvements and bug fixes.";
+  return t("update.availableGeneric");
 }
 
 export function promptAppUpdate(storeVersion?: string): Promise<boolean> {
   return new Promise((resolve) => {
-    Alert.alert("Update available", updateMessage(storeVersion), [
-      { text: "Not now", style: "cancel", onPress: () => resolve(false) },
+    Alert.alert(t("update.availableTitle"), updateMessage(storeVersion), [
+      { text: t("update.notNow"), style: "cancel", onPress: () => resolve(false) },
       {
-        text: "Update",
+        text: t("update.action"),
         onPress: async () => {
           try {
             await startAppUpdate();
             resolve(true);
           } catch {
-            Alert.alert("Update failed", "Could not open the update. Try again from the Play Store or App Store.");
+            Alert.alert(t("update.failedTitle"), t("update.couldNotOpen"));
             resolve(false);
           }
         },
@@ -54,10 +56,10 @@ export async function checkAndPromptAppUpdate(options?: {
   if (!isInAppUpdatesSupported()) {
     if (options?.manual) {
       Alert.alert(
-        "Check for updates",
+        t("update.checkTitle"),
         __DEV__
-          ? `You're using version ${getAppVersion()}. Update checks run in release builds installed from the store.`
-          : `You're using version ${getAppVersion()}.`,
+          ? t("update.devBuild", { current: getAppVersion() })
+          : t("update.usingVersion", { current: getAppVersion() }),
       );
     }
     return;
@@ -68,7 +70,7 @@ export async function checkAndPromptAppUpdate(options?: {
 
     if (!result.updateAvailable) {
       if (options?.manual) {
-        Alert.alert("Check for updates", `You're on the latest version (${getAppVersion()}).`);
+        Alert.alert(t("update.checkTitle"), t("update.latest", { current: getAppVersion() }));
       }
       return;
     }
@@ -78,7 +80,7 @@ export async function checkAndPromptAppUpdate(options?: {
         await startAppUpdate();
       } catch {
         if (options?.manual) {
-          Alert.alert("Update failed", "Could not start the update. Try again from Google Play.");
+          Alert.alert(t("update.failedTitle"), t("update.couldNotStart"));
         }
       }
       return;
@@ -88,10 +90,8 @@ export async function checkAndPromptAppUpdate(options?: {
   } catch {
     if (options?.manual) {
       Alert.alert(
-        "Check for updates",
-        Platform.OS === "ios"
-          ? "Could not check the App Store. Add AppStoreID in app.json when the app is published."
-          : "Could not check for updates. Make sure the app is installed from Google Play.",
+        t("update.checkTitle"),
+        Platform.OS === "ios" ? t("update.couldNotCheckIos") : t("update.couldNotCheckAndroid"),
       );
     }
   }

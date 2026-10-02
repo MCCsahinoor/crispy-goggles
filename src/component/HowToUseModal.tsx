@@ -2,6 +2,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Linking, Pressable, View } from "react-native";
 
+import { t, type TranslationKey } from "../i18n";
 import { Text } from "../lib/disableFontScaling";
 
 import {
@@ -19,85 +20,80 @@ type HowToUseModalProps = {
 
 type Step = {
   number: string;
-  title: string;
-  body: string;
-  bullets?: string[];
+  title: TranslationKey;
+  body: TranslationKey;
+  bullets?: TranslationKey[];
 };
 
 const STEPS: Step[] = [
   {
     number: "1",
-    title: "Install both apps",
-    body: "Filora Mobile is the phone companion for Filora on Windows. No account or USB cable is required.",
-    bullets: [
-      "Keep this Android app installed.",
-      "On your PC, download Filora for Windows, extract the archive, and run Filora.exe.",
-    ],
+    title: "howto.step1.title",
+    body: "howto.step1.body",
+    bullets: ["howto.step1.b1", "howto.step1.b2"],
   },
   {
     number: "2",
-    title: "Choose a sharing mode on the PC",
-    body: "Open Filora.exe and pick the same mode you will use on this phone.",
-    bullets: [
-      "Global link — best when the phone is on mobile data or a different network. The PC creates a temporary public HTTPS link.",
-      "Local network — best when the phone and PC are on the same Wi-Fi or the PC hotspot. Transfers stay on your network.",
-    ],
+    title: "howto.step2.title",
+    body: "howto.step2.body",
+    bullets: ["howto.step2.b1", "howto.step2.b2"],
   },
   {
     number: "3",
-    title: "Add files on your Windows PC",
-    body: "In Filora Desktop, add the photos, documents, videos, or archives you want to share. Sharing stays active until you stop it on the PC.",
+    title: "howto.step3.title",
+    body: "howto.step3.body",
   },
   {
     number: "4",
-    title: "Receive files on this phone",
-    body: "Open the Received tab and match the PC mode.",
-    bullets: [
-      "Global link: paste the share URL, or tap Scan Share QR, then Connect. Mobile data works.",
-      "Local network: tap Scan Wi-Fi QR and join the PC network, then scan the Share QR or paste the local link (for example http://192.168.x.x:8765/s/...), then Connect.",
-      "If the PC owner set a password, enter it when asked.",
-    ],
+    title: "howto.step4.title",
+    body: "howto.step4.body",
+    bullets: ["howto.step4.b1", "howto.step4.b2", "howto.step4.b3"],
   },
   {
     number: "5",
-    title: "Save files to your phone",
-    body: "Browse the shared list and tap Save on any file. Downloads go into a Filora folder on this device, typically Documents/Filora. You can change the folder in Settings.",
+    title: "howto.step5.title",
+    body: "howto.step5.body",
   },
   {
     number: "6",
-    title: "Send files from phone to PC",
-    body: "Use the Send tab when you want the opposite direction.",
+    title: "howto.step6.title",
+    body: "howto.step6.body",
     bullets: [
-      "Pick one or more files on your phone.",
-      "Show the QR code in this app.",
-      "On the PC, open Filora Desktop → Receive from phone → scan this QR.",
-      "If the PC has no camera, tap Copy under the QR and paste the code in Filora Desktop.",
-      "Phone and PC must be on the same Wi-Fi or the PC hotspot.",
+      "howto.step6.b1",
+      "howto.step6.b2",
+      "howto.step6.b3",
+      "howto.step6.b4",
+      "howto.step6.b5",
     ],
   },
 ];
 
-type HelpLink = { icon: keyof typeof Ionicons.glyphMap; title: string; subtitle: string; url: string };
+type HelpLink = {
+  icon: keyof typeof Ionicons.glyphMap;
+  title: TranslationKey;
+  subtitle: TranslationKey;
+  url: string;
+};
 
 /** Pinned above "Got it" so it is always visible while the steps scroll. */
 const WINDOWS_DOWNLOAD_LINK: HelpLink = {
   icon: "desktop-outline",
-  title: "Download for Windows",
-  subtitle: "Get Filora.exe for Windows 10/11",
+  title: "howto.link.windows.title",
+  subtitle: "howto.link.windows.subtitle",
   url: FILORA_WINDOWS_DOWNLOAD_URL,
 };
 
 const LINKS: HelpLink[] = [
   {
     icon: "globe-outline",
-    title: "Official website",
-    subtitle: "Features, FAQ, and how Filora works",
+    title: "howto.link.website.title",
+    subtitle: "howto.link.website.subtitle",
     url: FILORA_WEBSITE_URL,
   },
   {
     icon: "shield-outline",
-    title: "Privacy policy",
-    subtitle: "How Filora handles your files",
+    title: "howto.link.privacy.title",
+    subtitle: "howto.link.privacy.subtitle",
     url: FILORA_PRIVACY_URL,
   },
 ];
@@ -116,8 +112,8 @@ export default function HowToUseModal({ visible, onClose }: HowToUseModalProps) 
         <Ionicons name={link.icon} size={18} color={colors.blueSoft} />
       </View>
       <View style={styles.linkCopy}>
-        <Text style={styles.linkTitle}>{link.title}</Text>
-        <Text style={styles.linkSubtitle}>{link.subtitle}</Text>
+        <Text style={styles.linkTitle}>{t(link.title)}</Text>
+        <Text style={styles.linkSubtitle}>{t(link.subtitle)}</Text>
       </View>
       <Ionicons name="open-outline" size={16} color={colors.blueSoft} />
     </Pressable>
@@ -128,23 +124,21 @@ export default function HowToUseModal({ visible, onClose }: HowToUseModalProps) 
       visible={visible}
       onClose={onClose}
       gap={14}
-      accessibilityLabel="Close how to use"
+      accessibilityLabel={t("howto.close")}
       header={
         <View style={styles.header}>
           <View style={styles.titleRow}>
-            <Text style={styles.title}>How to use Filora</Text>
+            <Text style={styles.title}>{t("howto.title")}</Text>
             <Pressable
               onPress={onClose}
               hitSlop={12}
               style={({ pressed }) => [styles.iconClose, pressed && styles.pressed]}
-              accessibilityLabel="Close"
+              accessibilityLabel={t("common.close")}
             >
               <Ionicons name="close" size={20} color={colors.textMuted} />
             </Pressable>
           </View>
-          <Text style={styles.intro}>
-            Follow these steps to share files between your Windows PC and this phone. No account needed.
-          </Text>
+          <Text style={styles.intro}>{t("howto.intro")}</Text>
         </View>
       }
       footer={
@@ -162,7 +156,7 @@ export default function HowToUseModal({ visible, onClose }: HowToUseModalProps) 
               style={styles.closeGradient}
             >
               <Ionicons name="checkmark-circle" size={18} color="#FFFFFF" />
-              <Text style={styles.closeText}>Got it</Text>
+              <Text style={styles.closeText}>{t("common.gotIt")}</Text>
             </LinearGradient>
           </Pressable>
         </View>
@@ -174,19 +168,19 @@ export default function HowToUseModal({ visible, onClose }: HowToUseModalProps) 
             <Text style={styles.stepNumber}>{step.number}</Text>
           </View>
           <View style={styles.stepCopy}>
-            <Text style={styles.stepTitle}>{step.title}</Text>
-            <Text style={styles.stepBody}>{step.body}</Text>
+            <Text style={styles.stepTitle}>{t(step.title)}</Text>
+            <Text style={styles.stepBody}>{t(step.body)}</Text>
             {step.bullets?.map((item) => (
               <View key={item} style={styles.bulletRow}>
                 <View style={styles.bulletDot} />
-                <Text style={styles.bulletText}>{item}</Text>
+                <Text style={styles.bulletText}>{t(item)}</Text>
               </View>
             ))}
           </View>
         </View>
       ))}
 
-      <Text style={styles.linksHeading}>Helpful links</Text>
+      <Text style={styles.linksHeading}>{t("howto.linksHeading")}</Text>
       {LINKS.map(renderLink)}
     </ModalFrame>
   );

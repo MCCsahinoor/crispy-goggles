@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import QRCode from "react-native-qrcode-svg";
 
+import { t, tn } from "../i18n";
 import { Text } from "../lib/disableFontScaling";
 
 import {
@@ -90,7 +91,7 @@ export default function SendPanel({ onToast }: SendPanelProps) {
       setSession(null);
       setProgress(null);
     } catch (error) {
-      onToast(error instanceof Error ? error.message : "Could not pick files.");
+      onToast(error instanceof Error ? error.message : t("send.couldNotPick"));
     }
   }, [onToast]);
 
@@ -106,7 +107,7 @@ export default function SendPanel({ onToast }: SendPanelProps) {
       }
       setFiles((prev) => [...prev, ...mapPickedFiles(result.assets)]);
     } catch (error) {
-      onToast(error instanceof Error ? error.message : "Could not pick files.");
+      onToast(error instanceof Error ? error.message : t("send.couldNotPick"));
     }
   }, [onToast]);
 
@@ -149,12 +150,12 @@ export default function SendPanel({ onToast }: SendPanelProps) {
 
       await uploadFilesToPc(nextSession, receive, setProgress, controller.signal);
       setStep("done");
-      onToast(`Sent ${files.length} file${files.length === 1 ? "" : "s"} to your PC.`);
+      onToast(tn("send.toastSent", files.length));
     } catch (error) {
       if (controller.signal.aborted) {
         return;
       }
-      const message = error instanceof Error ? error.message : "Send failed.";
+      const message = error instanceof Error ? error.message : t("send.failed");
       setProgress({ phase: "error", uploadedCount: 0, totalCount: files.length, message });
       onToast(message);
     } finally {
@@ -168,9 +169,9 @@ export default function SendPanel({ onToast }: SendPanelProps) {
     }
     try {
       await Clipboard.setStringAsync(session.qrValue);
-      onToast("Copied. Paste it in Filora Desktop → Receive from phone.");
+      onToast(t("send.copied"));
     } catch {
-      onToast("Could not copy. Long-press the code to copy it.");
+      onToast(t("send.couldNotCopy"));
     }
   }, [onToast, session]);
 
@@ -187,16 +188,14 @@ export default function SendPanel({ onToast }: SendPanelProps) {
           </LinearGradient>
         </View>
         <View style={styles.heroCopy}>
-          <Text style={styles.heroTitle}>Send to PC</Text>
-          <Text style={styles.heroText}>
-            Select files on your phone, generate a QR code, then scan it from Filora Desktop to upload.
-          </Text>
+          <Text style={styles.heroTitle}>{t("send.title")}</Text>
+          <Text style={styles.heroText}>{t("send.hero")}</Text>
         </View>
       </View>
 
       {step === "pick" && (
         <>
-          <StepLabel>Step 1 · Select files</StepLabel>
+          <StepLabel>{t("send.step1")}</StepLabel>
           <Pressable
             onPress={pickFiles}
             style={({ pressed }) => [styles.pickCard, pressed && styles.pressed]}
@@ -205,8 +204,8 @@ export default function SendPanel({ onToast }: SendPanelProps) {
               <Ionicons name="document-attach-outline" size={24} color={colors.blueSoft} />
             </View>
             <View style={styles.pickCopy}>
-              <Text style={styles.pickTitle}>Choose files</Text>
-              <Text style={styles.pickSubtitle}>Photos, documents, videos, and more</Text>
+              <Text style={styles.pickTitle}>{t("send.chooseFiles")}</Text>
+              <Text style={styles.pickSubtitle}>{t("send.chooseFilesSubtitle")}</Text>
             </View>
             <Ionicons name="add-circle-outline" size={22} color={colors.textDim} />
           </Pressable>
@@ -215,7 +214,7 @@ export default function SendPanel({ onToast }: SendPanelProps) {
 
       {(step === "ready" || step === "qr" || step === "uploading") && files.length > 0 && (
         <>
-          <StepLabel>{`Selected files (${files.length})`}</StepLabel>
+          <StepLabel>{t("send.selected", { count: files.length })}</StepLabel>
           <ScrollView
             style={[styles.fileList, { maxHeight: fileListMaxHeight }]}
             nestedScrollEnabled
@@ -244,11 +243,11 @@ export default function SendPanel({ onToast }: SendPanelProps) {
           {step === "ready" && (
             <>
               <Pressable onPress={addMoreFiles} style={styles.linkButton}>
-                <Text style={styles.linkButtonText}>Add more files</Text>
+                <Text style={styles.linkButtonText}>{t("send.addMore")}</Text>
               </Pressable>
               <OrDivider />
-              <StepLabel>Step 2 · Generate QR</StepLabel>
-              <ConnectButton onPress={startSend} disabled={waiting} label="Generate QR" />
+              <StepLabel>{t("send.step2")}</StepLabel>
+              <ConnectButton onPress={startSend} disabled={waiting} label={t("send.generateQr")} />
             </>
           )}
         </>
@@ -256,11 +255,11 @@ export default function SendPanel({ onToast }: SendPanelProps) {
 
       {(step === "qr" || step === "uploading") && session && (
         <View style={styles.qrBlock}>
-          <StepLabel>Step 3 · Scan from Filora Desktop</StepLabel>
+          <StepLabel>{t("send.step3")}</StepLabel>
           <Pressable
             onPress={() => setQrZoomed(true)}
             accessibilityRole="button"
-            accessibilityLabel="Zoom QR code"
+            accessibilityLabel={t("send.zoomQr")}
             style={({ pressed }) => [styles.qrWrap, pressed && styles.pressed]}
           >
             <QRCode value={session.qrValue} size={layout.qrSize} color={qrColor} backgroundColor={qrBg} />
@@ -268,14 +267,11 @@ export default function SendPanel({ onToast }: SendPanelProps) {
               <Ionicons name="expand-outline" size={16} color={colors.textMuted} />
             </View>
           </Pressable>
-          <Text style={styles.qrZoomCaption}>Tap QR to zoom</Text>
-          <Text style={styles.qrHint}>
-            On your PC, open Filora Desktop → Receive from phone → Scan this QR. Your phone will
-            connect and upload automatically.
-          </Text>
+          <Text style={styles.qrZoomCaption}>{t("send.tapToZoom")}</Text>
+          <Text style={styles.qrHint}>{t("send.qrHint")}</Text>
           <View style={styles.codePath}>
             <OrDivider />
-            <Text style={styles.codeLabel}>No camera? Copy this code</Text>
+            <Text style={styles.codeLabel}>{t("send.noCamera")}</Text>
             <View style={styles.codeRow}>
               <Text style={styles.codeValue} numberOfLines={2} selectable>
                 {session.qrValue}
@@ -285,40 +281,41 @@ export default function SendPanel({ onToast }: SendPanelProps) {
                   void copySendCode();
                 }}
                 accessibilityRole="button"
-                accessibilityLabel="Copy send code"
+                accessibilityLabel={t("send.copyCodeLabel")}
                 style={({ pressed }) => [styles.copyButton, pressed && styles.pressed]}
               >
                 <Ionicons name="copy-outline" size={14} color={colors.purpleSoft} />
-                <Text style={styles.copyButtonText}>Copy</Text>
+                <Text style={styles.copyButtonText}>{t("common.copy")}</Text>
               </Pressable>
             </View>
-            <Text style={styles.codeHint}>
-              Paste it in Filora Desktop → Receive from phone.
-            </Text>
+            <Text style={styles.codeHint}>{t("send.pasteHint")}</Text>
           </View>
           {progress?.phase === "waiting" && (
             <View style={styles.statusRow}>
               <ActivityIndicator size="small" color={colors.blueSoft} />
-              <Text style={styles.statusText}>
-                {files.length} file{files.length === 1 ? "" : "s"} ready — scan this QR on Filora
-                Desktop
-              </Text>
+              <Text style={styles.statusText}>{tn("send.waiting", files.length)}</Text>
             </View>
           )}
           {progress?.phase === "connecting" && (
             <View style={styles.statusRow}>
               <ActivityIndicator size="small" color={colors.blueSoft} />
-              <Text style={styles.statusText}>
-                Desktop scanned — uploading {files.length} file{files.length === 1 ? "" : "s"}…
-              </Text>
+              <Text style={styles.statusText}>{tn("send.connecting", files.length)}</Text>
             </View>
           )}
           {progress?.phase === "uploading" && (
             <View style={styles.statusRow}>
               <ActivityIndicator size="small" color={colors.blueSoft} />
               <Text style={styles.statusText}>
-                Uploading {progress.uploadedCount + 1} of {progress.totalCount}
-                {progress.currentFile ? `: ${progress.currentFile}` : ""}
+                {progress.currentFile
+                  ? t("send.uploadingFile", {
+                      current: progress.uploadedCount + 1,
+                      total: progress.totalCount,
+                      file: progress.currentFile,
+                    })
+                  : t("send.uploading", {
+                      current: progress.uploadedCount + 1,
+                      total: progress.totalCount,
+                    })}
               </Text>
             </View>
           )}
@@ -326,7 +323,7 @@ export default function SendPanel({ onToast }: SendPanelProps) {
             <Text style={styles.errorText}>{progress.message}</Text>
           )}
           <Pressable onPress={reset} style={styles.linkButton}>
-            <Text style={styles.linkButtonText}>Cancel</Text>
+            <Text style={styles.linkButtonText}>{t("common.cancel")}</Text>
           </Pressable>
         </View>
       )}
@@ -334,12 +331,10 @@ export default function SendPanel({ onToast }: SendPanelProps) {
       {step === "done" && (
         <View style={styles.doneBlock}>
           <Ionicons name="checkmark-circle" size={48} color={colors.success} />
-          <Text style={styles.doneTitle}>Sent to PC</Text>
-          <Text style={styles.doneText}>
-            {files.length} file{files.length === 1 ? "" : "s"} uploaded successfully.
-          </Text>
+          <Text style={styles.doneTitle}>{t("send.doneTitle")}</Text>
+          <Text style={styles.doneText}>{tn("send.doneBody", files.length)}</Text>
           <View style={styles.doneButtonWrap}>
-            <ConnectButton onPress={reset} label="Send more files" />
+            <ConnectButton onPress={reset} label={t("send.sendMore")} />
           </View>
         </View>
       )}
@@ -363,7 +358,7 @@ export default function SendPanel({ onToast }: SendPanelProps) {
               />
             ) : null}
           </View>
-          <Text style={styles.qrZoomCloseHint}>Tap to close</Text>
+          <Text style={styles.qrZoomCloseHint}>{t("send.tapToClose")}</Text>
         </Pressable>
       </Modal>
     </View>

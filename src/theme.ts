@@ -17,6 +17,8 @@ import {
   type ViewStyle,
 } from "react-native";
 
+import { isNonLatinLanguage, useI18n } from "./i18n";
+
 export const fontFamily = {
   bodyRegular: "Raleway_400Regular",
   bodyMedium: "Raleway_500Medium",
@@ -50,8 +52,27 @@ const poppinsItalicFamily = {
 
 export type BodyFontWeight = 400 | 500 | 600 | 700;
 
+type FontStyleResult = Pick<TextStyle, "fontFamily" | "fontWeight" | "fontStyle">;
+
+/**
+ * Raleway/Poppins only contain Latin glyphs. For Hindi and Bengali we leave the family unset so the
+ * system font (Noto Sans Devanagari / Bengali) renders the text, and express weight via fontWeight.
+ */
+function systemFont(weight: number, italic = false): FontStyleResult {
+  const fontWeight = String(weight) as TextStyle["fontWeight"];
+  return italic ? { fontWeight, fontStyle: "italic" } : { fontWeight };
+}
+
 /** Raleway for paragraph and UI copy. Omit on header/title styles. */
-export function para(weight: BodyFontWeight = 400): Pick<TextStyle, "fontFamily"> {
+export function para(weight: BodyFontWeight = 400): FontStyleResult {
+  if (isNonLatinLanguage()) {
+    return systemFont(weight);
+  }
+  return latinPara(weight);
+}
+
+/** Always Raleway, for text that is never translated (e.g. the header tagline). */
+export function latinPara(weight: BodyFontWeight = 400): FontStyleResult {
   switch (weight) {
     case 700:
       return { fontFamily: fontFamily.bodyBold };
@@ -67,10 +88,15 @@ export function para(weight: BodyFontWeight = 400): Pick<TextStyle, "fontFamily"
 export type HeadingFontWeight = 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900;
 
 /** Poppins for titles and section headers. Pass `italic: true` for italic variants. */
-export function heading(
-  weight: HeadingFontWeight = 700,
-  italic = false,
-): Pick<TextStyle, "fontFamily"> {
+export function heading(weight: HeadingFontWeight = 700, italic = false): FontStyleResult {
+  if (isNonLatinLanguage()) {
+    return systemFont(weight, italic);
+  }
+  return latinHeading(weight, italic);
+}
+
+/** Always Poppins, for text that is never translated (e.g. the app name). */
+export function latinHeading(weight: HeadingFontWeight = 700, italic = false): FontStyleResult {
   return {
     fontFamily: italic ? poppinsItalicFamily[weight] : poppinsFamily[weight],
   };
@@ -105,12 +131,6 @@ export type ThemeColors = {
   warningBg: string;
   warningBorder: string;
   overlay: string;
-};
-
-export const THEME_MODE_LABELS: Record<ThemeMode, string> = {
-  system: "System",
-  light: "Light",
-  dark: "Dark",
 };
 
 export const darkColors: ThemeColors = {
@@ -179,9 +199,9 @@ export const gradients = {
 export const radius = {
   sm: 10,
   md: 14,
-  lg: 18,
+  lg: 10,
   xl: 22,
-  full: 999,
+  full: 22,
 } as const;
 
 const THEME_STORE = `${FileSystem.documentDirectory ?? ""}filedrop-theme.txt`;
@@ -270,5 +290,11 @@ type NamedStyles<T> = { [P in keyof T]: ViewStyle | TextStyle | ImageStyle };
 
 export function useThemedStyles<T extends NamedStyles<T>>(factory: (colors: ThemeColors) => T) {
   const { colors } = useTheme();
-  return useMemo(() => StyleSheet.create(factory(colors)), [colors, factory]);
+  // Font helpers depend on the active language, so rebuild styles when it changes.
+  const { language } = useI18n();
+  return useMemo(
+    () => StyleSheet.create(factory(colors)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [colors, factory, language],
+  );
 }

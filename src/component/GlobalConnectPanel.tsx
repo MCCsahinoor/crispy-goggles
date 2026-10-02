@@ -7,6 +7,7 @@ import {
 } from "./ui";
 import { StyleSheet, View } from "react-native";
 
+import { t } from "../i18n";
 import { Text } from "../lib/disableFontScaling";
 
 import { heading, para, useThemedStyles, type ThemeColors } from "../theme";
@@ -34,10 +35,8 @@ export default function GlobalConnectPanel({
       <View style={styles.heroRow}>
         <GlobeHero compact />
         <View style={styles.heroCopy}>
-          <Text style={styles.heroTitle}>Global link mode</Text>
-          <Text style={styles.heroText}>
-            Use this when Filora Desktop is in Global link mode. Phone can use mobile data.
-          </Text>
+          <Text style={styles.heroTitle}>{t("global.title")}</Text>
+          <Text style={styles.heroText}>{t("global.body")}</Text>
         </View>
       </View>
 
@@ -51,8 +50,8 @@ export default function GlobalConnectPanel({
       <OrDivider />
       <ScanActionCard
         icon="qr-code-outline"
-        title="Scan Share QR"
-        subtitle="Scan the QR code from Filora Desktop"
+        title={t("scanCard.shareTitle")}
+        subtitle={t("global.scanShareSubtitle")}
         onPress={onScanShare}
         disabled={loading}
       />

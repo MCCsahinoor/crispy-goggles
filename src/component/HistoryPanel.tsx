@@ -1,6 +1,7 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Pressable, StyleSheet, View } from "react-native";
 
+import { t } from "../i18n";
 import { Text } from "../lib/disableFontScaling";
 
 import { ConnectionMode } from "../lib/filedrop";
@@ -21,14 +22,14 @@ function formatWhen(at: number): string {
   const delta = Date.now() - at;
   const minutes = Math.round(delta / 60000);
   if (minutes < 1) {
-    return "Just now";
+    return t("history.justNow");
   }
   if (minutes < 60) {
-    return `${minutes}m ago`;
+    return t("history.minutesAgo", { count: minutes });
   }
   const hours = Math.round(minutes / 60);
   if (hours < 24) {
-    return `${hours}h ago`;
+    return t("history.hoursAgo", { count: hours });
   }
   return new Date(at).toLocaleDateString();
 }
@@ -43,10 +44,8 @@ export default function HistoryPanel({ entries, onOpen }: HistoryPanelProps) {
         <View style={styles.emptyIcon}>
           <Ionicons name="time-outline" size={28} color={colors.textMuted} />
         </View>
-        <Text style={styles.emptyTitle}>No history yet</Text>
-        <Text style={styles.emptyText}>
-          Recent PC connections will show up here so you can reconnect faster.
-        </Text>
+        <Text style={styles.emptyTitle}>{t("history.empty")}</Text>
+        <Text style={styles.emptyText}>{t("history.emptyBody")}</Text>
       </View>
     );
   }
@@ -71,7 +70,7 @@ export default function HistoryPanel({ entries, onOpen }: HistoryPanelProps) {
               {entry.url}
             </Text>
             <Text style={styles.rowMeta}>
-              {entry.mode === "local" ? "Local network" : "Global link"} · {formatWhen(entry.at)}
+              {entry.mode === "local" ? t("mode.local") : t("mode.global")} · {formatWhen(entry.at)}
             </Text>
           </View>
           <Ionicons name="chevron-forward" size={16} color={colors.textDim} />

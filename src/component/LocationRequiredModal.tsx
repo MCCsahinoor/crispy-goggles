@@ -2,6 +2,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Pressable, View } from "react-native";
 
+import { t, type TranslationKey } from "../i18n";
 import { Text } from "../lib/disableFontScaling";
 import type { LocationWifiReadiness } from "../lib/permissions";
 import { gradients, heading, para, radius, useTheme, useThemedStyles, type ThemeColors } from "../theme";
@@ -19,19 +20,19 @@ type LocationRequiredModalProps = {
 
 const COPY: Record<
   LocationBlockReason,
-  { icon: keyof typeof Ionicons.glyphMap; title: string; body: string; action: string }
+  { icon: keyof typeof Ionicons.glyphMap; title: TranslationKey; body: TranslationKey; action: TranslationKey }
 > = {
   permission_denied: {
     icon: "location-outline",
-    title: "Allow location access",
-    body: "Filora uses location only to join your PC's Wi-Fi. It does not track you.",
-    action: "Allow location",
+    title: "location.permTitle",
+    body: "location.permBody",
+    action: "location.permAction",
   },
   services_off: {
     icon: "navigate-outline",
-    title: "Turn on location",
-    body: "Android needs location turned on so Filora can join your PC's Wi-Fi. Filora does not track you.",
-    action: "Turn on location",
+    title: "location.offTitle",
+    body: "location.offBody",
+    action: "location.offAction",
   },
 };
 
@@ -50,13 +51,13 @@ export default function LocationRequiredModal({
     <ModalFrame
       visible={visible}
       onClose={onConnectManually}
-      accessibilityLabel="Dismiss location prompt"
+      accessibilityLabel={t("location.dismiss")}
       header={
         <View style={styles.header}>
           <View style={styles.iconWrap}>
             <Ionicons name={copy.icon} size={22} color={colors.blueSoft} />
           </View>
-          <Text style={styles.title}>{copy.title}</Text>
+          <Text style={styles.title}>{t(copy.title)}</Text>
         </View>
       }
       footer={
@@ -75,7 +76,7 @@ export default function LocationRequiredModal({
             >
               <Ionicons name="location" size={18} color="#FFFFFF" />
               <Text style={styles.primaryText} numberOfLines={1}>
-                {enabling ? "Opening settings…" : copy.action}
+                {enabling ? t("location.opening") : t(copy.action)}
               </Text>
             </LinearGradient>
           </Pressable>
@@ -84,12 +85,12 @@ export default function LocationRequiredModal({
             onPress={onConnectManually}
             style={({ pressed }) => [styles.secondary, pressed && styles.pressed]}
           >
-            <Text style={styles.secondaryText}>Connect manually</Text>
+            <Text style={styles.secondaryText}>{t("location.connectManually")}</Text>
           </Pressable>
         </View>
       }
     >
-      <Text style={styles.body}>{copy.body}</Text>
+      <Text style={styles.body}>{t(copy.body)}</Text>
     </ModalFrame>
   );
 }

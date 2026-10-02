@@ -1,6 +1,7 @@
 import { File, UploadTask, UploadType } from "expo-file-system";
 import * as LegacyFileSystem from "expo-file-system/legacy";
 
+import { t } from "../i18n";
 import { PHONE_CONNECT_PORT, startDesktopConnectListener } from "./phoneListen";
 import { DEFAULT_PORT, withLocalWifiRoute } from "./filedrop";
 import { listLocalIpv4, subnetPrefix } from "./networkIps";
@@ -270,7 +271,7 @@ export async function waitForPcReceive(
   let round = 0;
   while (Date.now() - started < POLL_TIMEOUT_MS) {
     if (signal.aborted) {
-      throw new Error("Send cancelled.");
+      throw new Error(t("sendErr.cancelled"));
     }
 
     const ready = await findPcReceive(token, signal, round % 2 === 1);
@@ -284,9 +285,7 @@ export async function waitForPcReceive(
     await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
   }
 
-  throw new Error(
-    "Desktop did not respond. Make sure the phone and PC are on the same Wi-Fi (or this PC's hotspot) and that Windows Firewall allows Filora.",
-  );
+  throw new Error(t("sendErr.noResponse"));
 }
 
 async function uploadViaFetch(url: string, file: SendFile, signal: AbortSignal): Promise<void> {
@@ -321,7 +320,7 @@ async function uploadViaFetch(url: string, file: SendFile, signal: AbortSignal):
   } catch {
     // Ignore parse errors.
   }
-  throw new Error(detail || `Upload failed (${response.status}).`);
+  throw new Error(detail || t("sendErr.uploadFailedStatus", { status: response.status }));
 }
 
 async function uploadViaLegacy(url: string, file: SendFile): Promise<void> {
@@ -336,7 +335,7 @@ async function uploadViaLegacy(url: string, file: SendFile): Promise<void> {
     },
   });
   if (result.status < 200 || result.status >= 300) {
-    throw new Error(`Upload failed (${result.status}).`);
+    throw new Error(t("sendErr.uploadFailedStatus", { status: result.status }));
   }
 }
 
@@ -351,7 +350,7 @@ async function uploadViaTask(url: string, uploadFile: File, file: SendFile, sign
   });
   const result = await task.uploadAsync();
   if (result.status < 200 || result.status >= 300) {
-    throw new Error(`Upload failed (${result.status}).`);
+    throw new Error(t("sendErr.uploadFailedStatus", { status: result.status }));
   }
 }
 
@@ -364,7 +363,7 @@ async function uploadOneFile(
 ): Promise<void> {
   const uploadFile = new File(file.uri);
   if (!uploadFile.exists) {
-    throw new Error(`Could not read ${file.name} on this phone. Pick the file again.`);
+    throw new Error(t("sendErr.couldNotRead", { name: file.name }));
   }
 
   const urls = [
@@ -393,14 +392,14 @@ async function uploadOneFile(
           clearTimeout(timer);
           return;
         } catch (error) {
-          lastError = error instanceof Error ? error : new Error("Upload failed.");
+          lastError = error instanceof Error ? error : new Error(t("sendErr.uploadFailed"));
         }
         try {
           await withLocalWifiRoute(url, attempt);
           clearTimeout(timer);
           return;
         } catch (error) {
-          lastError = error instanceof Error ? error : new Error("Upload failed.");
+          lastError = error instanceof Error ? error : new Error(t("sendErr.uploadFailed"));
         }
       }
     } finally {
@@ -409,7 +408,7 @@ async function uploadOneFile(
     }
   }
 
-  throw lastError || new Error(`Could not upload ${file.name}.`);
+  throw lastError || new Error(t("sendErr.couldNotUpload", { name: file.name }));
 }
 
 function guessMimeType(name: string): string {
@@ -442,7 +441,7 @@ export async function uploadFilesToPc(
 
   for (let i = 0; i < session.files.length; i += 1) {
     if (signal?.aborted) {
-      throw new Error("Send cancelled.");
+      throw new Error(t("sendErr.cancelled"));
     }
     const file = session.files[i];
     onProgress?.({
@@ -459,11 +458,11 @@ export async function uploadFilesToPc(
         uploaded = true;
         break;
       } catch (error) {
-        lastError = error instanceof Error ? error : new Error("Upload failed.");
+        lastError = error instanceof Error ? error : new Error(t("sendErr.uploadFailed"));
       }
     }
     if (!uploaded) {
-      throw lastError || new Error(`Could not upload ${file.name}.`);
+      throw lastError || new Error(t("sendErr.couldNotUpload", { name: file.name }));
     }
   }
 

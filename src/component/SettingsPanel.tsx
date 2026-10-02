@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 
+import { LANGUAGES, t, useI18n, type TranslationKey } from "../i18n";
 import { Text } from "../lib/disableFontScaling";
 
 import {
@@ -29,7 +30,6 @@ import {
   heading,
   para,
   radius,
-  THEME_MODE_LABELS,
   useTheme,
   useThemedStyles,
   type ThemeColors,
@@ -49,6 +49,12 @@ const THEME_OPTIONS: { mode: ThemeMode; icon: keyof typeof Ionicons.glyphMap }[]
   { mode: "light", icon: "sunny-outline" },
   { mode: "dark", icon: "moon-outline" },
 ];
+
+const THEME_LABEL_KEYS: Record<ThemeMode, TranslationKey> = {
+  system: "settings.theme.system",
+  light: "settings.theme.light",
+  dark: "settings.theme.dark",
+};
 
 type IoniconName = keyof typeof Ionicons.glyphMap;
 
@@ -101,13 +107,13 @@ type SettingsPanelProps = {
 export default function SettingsPanel({ onOpenHowTo }: SettingsPanelProps) {
   const { colors, mode, setMode } = useTheme();
   const styles = useThemedStyles(createStyles);
-  const [language, setLanguage] = useState("English");
+  const { language, setLanguage } = useI18n();
   const [languageOpen, setLanguageOpen] = useState(false);
   const [themeOpen, setThemeOpen] = useState(false);
   const [privacyOpen, setPrivacyOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [downloadFolder, setDownloadFolder] = useState(
-    Platform.OS === "android" ? DEFAULT_PUBLIC_DOWNLOAD_PATH : "Filora (app folder)",
+    Platform.OS === "android" ? DEFAULT_PUBLIC_DOWNLOAD_PATH : t("settings.folderIosPath"),
   );
   const [busy, setBusy] = useState(false);
   const [permissions, setPermissions] = useState<PermissionItem[]>([]);
@@ -140,7 +146,7 @@ export default function SettingsPanel({ onOpenHowTo }: SettingsPanelProps) {
 
   const handleDownloadFolder = useCallback(async () => {
     if (Platform.OS !== "android") {
-      Alert.alert("Download folder", "Files are saved to the Filora folder in this app.");
+      Alert.alert(t("settings.downloadFolder"), t("settings.folderIosBody"));
       return;
     }
     try {
@@ -150,25 +156,25 @@ export default function SettingsPanel({ onOpenHowTo }: SettingsPanelProps) {
         setDownloadFolder(next);
       }
     } catch (error) {
-      Alert.alert("Download folder", error instanceof Error ? error.message : "Could not change folder.");
+      Alert.alert(t("settings.downloadFolder"), error instanceof Error ? error.message : t("settings.couldNotChangeFolder"));
     } finally {
       setBusy(false);
     }
   }, []);
 
   const handleClearCache = useCallback(() => {
-    Alert.alert("Clear cache", "Remove temporary files from this app?", [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t("settings.clearCache"), t("settings.clearCacheConfirm"), [
+      { text: t("common.cancel"), style: "cancel" },
       {
-        text: "Clear",
+        text: t("settings.clear"),
         style: "destructive",
         onPress: async () => {
           try {
             setBusy(true);
             await clearAppCache();
-            Alert.alert("Cache cleared", "Temporary files were removed.");
+            Alert.alert(t("settings.cacheCleared"), t("settings.cacheClearedBody"));
           } catch (error) {
-            Alert.alert("Clear cache", error instanceof Error ? error.message : "Could not clear cache.");
+            Alert.alert(t("settings.clearCache"), error instanceof Error ? error.message : t("settings.couldNotClearCache"));
           } finally {
             setBusy(false);
           }
@@ -197,7 +203,7 @@ export default function SettingsPanel({ onOpenHowTo }: SettingsPanelProps) {
         await requestAppPermission(id);
         await loadPermissions();
       } catch (error) {
-        Alert.alert("Permissions", error instanceof Error ? error.message : "Could not request permission.");
+        Alert.alert(t("settings.permissions"), error instanceof Error ? error.message : t("settings.couldNotRequestPermission"));
       } finally {
         setBusy(false);
       }
@@ -211,13 +217,13 @@ export default function SettingsPanel({ onOpenHowTo }: SettingsPanelProps) {
       const result = await requestRequiredPermissions();
       await loadPermissions();
       Alert.alert(
-        "Permissions",
+        t("settings.permissions"),
         result.granted === result.total
-          ? "All required permissions are allowed."
-          : `${result.granted} of ${result.total} required permissions are allowed.`,
+          ? t("settings.allRequiredAllowed")
+          : t("settings.someRequiredAllowed", { granted: result.granted, total: result.total }),
       );
     } catch (error) {
-      Alert.alert("Permissions", error instanceof Error ? error.message : "Could not request permissions.");
+      Alert.alert(t("settings.permissions"), error instanceof Error ? error.message : t("settings.couldNotRequestPermissions"));
     } finally {
       setBusy(false);
     }
@@ -226,33 +232,33 @@ export default function SettingsPanel({ onOpenHowTo }: SettingsPanelProps) {
   const grantedCount = permissions.filter((item) => item.granted).length;
   const permissionSummary =
     permissions.length === 0
-      ? "Camera, location, and storage"
+      ? t("settings.permissionsNone")
       : grantedCount === permissions.length
-        ? "All required permissions allowed"
-        : `${grantedCount} of ${permissions.length} allowed`;
+        ? t("settings.permissionsAll")
+        : t("settings.permissionsSome", { granted: grantedCount, total: permissions.length });
 
   return (
     <View style={styles.wrap}>
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>General</Text>
+        <Text style={styles.sectionTitle}>{t("settings.general")}</Text>
         <SettingsRow
           icon="help-circle-outline"
-          title="How to use"
-          subtitle="Step-by-step instructions"
+          title={t("settings.howTo")}
+          subtitle={t("settings.howToSubtitle")}
           chevron
           onPress={onOpenHowTo}
         />
         <SettingsRow
           icon="globe-outline"
-          title="Language"
-          subtitle={`🇬🇧 ${language}`}
+          title={t("settings.language")}
+          subtitle={LANGUAGES.find((item) => item.code === language)?.label}
           chevron
           onPress={() => setLanguageOpen(true)}
         />
         <SettingsRow
           icon="color-palette-outline"
-          title="Theme"
-          subtitle={THEME_MODE_LABELS[mode]}
+          title={t("settings.theme")}
+          subtitle={t(THEME_LABEL_KEYS[mode])}
           chevron
           onPress={() => setThemeOpen(true)}
         />
@@ -261,10 +267,10 @@ export default function SettingsPanel({ onOpenHowTo }: SettingsPanelProps) {
       <Divider />
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Storage</Text>
+        <Text style={styles.sectionTitle}>{t("settings.storage")}</Text>
         <SettingsRow
           icon="folder-outline"
-          title="Download folder"
+          title={t("settings.downloadFolder")}
           subtitle={downloadFolder}
           chevron
           onPress={handleDownloadFolder}
@@ -272,8 +278,8 @@ export default function SettingsPanel({ onOpenHowTo }: SettingsPanelProps) {
         />
         <SettingsRow
           icon="trash-outline"
-          title="Clear cache"
-          subtitle="Remove temporary files"
+          title={t("settings.clearCache")}
+          subtitle={t("settings.clearCacheSubtitle")}
           onPress={handleClearCache}
           disabled={busy}
         />
@@ -282,7 +288,7 @@ export default function SettingsPanel({ onOpenHowTo }: SettingsPanelProps) {
       <Divider />
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Permissions <Text style={styles.sectionSubtitle}>({permissionSummary})</Text></Text>
+        <Text style={styles.sectionTitle}>{t("settings.permissions")} <Text style={styles.sectionSubtitle}>({permissionSummary})</Text></Text>
 
         {permissions.map((item) => (
           <SettingsRow
@@ -295,7 +301,7 @@ export default function SettingsPanel({ onOpenHowTo }: SettingsPanelProps) {
                   : "folder-outline"
             }
             title={item.title}
-            subtitle={`${item.granted ? "Allowed" : "Not allowed"} · ${item.subtitle}`}
+            subtitle={`${item.granted ? t("settings.allowed") : t("settings.notAllowed")} · ${item.subtitle}`}
             chevron={!item.granted}
             onPress={item.granted ? undefined : () => handleRequestPermission(item.id)}
             disabled={busy}
@@ -303,8 +309,8 @@ export default function SettingsPanel({ onOpenHowTo }: SettingsPanelProps) {
         ))}
         <SettingsRow
           icon="settings-outline"
-          title="Open system settings"
-          subtitle="Change permissions if the prompt is blocked"
+          title={t("settings.openSystemSettings")}
+          subtitle={t("settings.openSystemSettingsSubtitle")}
           chevron
           onPress={openAppSettings}
         />
@@ -313,45 +319,45 @@ export default function SettingsPanel({ onOpenHowTo }: SettingsPanelProps) {
       <Divider />
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>About</Text>
+        <Text style={styles.sectionTitle}>{t("settings.about")}</Text>
         <SettingsRow
           icon="information-circle-outline"
           title="Filora"
-          subtitle="Fast & private local file transfer"
+          subtitle={t("settings.aboutTagline")}
           onPress={() => setAboutOpen(true)}
         />
         <SettingsRow
           icon="globe-outline"
-          title="Official website"
+          title={t("settings.website")}
           subtitle="filora-two.vercel.app"
           chevron
           onPress={() => Linking.openURL(FILORA_WEBSITE_URL)}
         />
         <SettingsRow
           icon="shield-outline"
-          title="Privacy policy"
+          title={t("settings.privacy")}
           onPress={() => setPrivacyOpen(true)}
         />
         <SettingsRow
           icon="phone-portrait-outline"
-          title="Check for updates"
-          subtitle="See if a new version is available."
+          title={t("settings.checkUpdates")}
+          subtitle={t("settings.checkUpdatesSubtitle")}
           onPress={handleCheckUpdates}
         />
         <SettingsRow
           icon="desktop-outline"
-          title="Get Filora Desktop"
-          subtitle="Download the desktop app for Windows"
+          title={t("settings.getDesktop")}
+          subtitle={t("settings.getDesktopSubtitle")}
           chevron
           onPress={handleDesktop}
         />
-        <SettingsRow iconLabel="#" title="Version" subtitle={getAppVersion()} />
+        <SettingsRow iconLabel="#" title={t("settings.version")} subtitle={getAppVersion()} />
       </View>
 
       {busy && (
         <View style={styles.busyRow}>
           <ActivityIndicator size="small" color={colors.blueSoft} />
-          <Text style={styles.busyText}>Working...</Text>
+          <Text style={styles.busyText}>{t("common.working")}</Text>
         </View>
       )}
 
@@ -360,25 +366,49 @@ export default function SettingsPanel({ onOpenHowTo }: SettingsPanelProps) {
         onClose={() => setLanguageOpen(false)}
         gap={4}
         scroll={false}
-        header={<Text style={styles.modalTitle}>Language</Text>}
+        accessibilityLabel={t("settings.closeLanguage")}
+        header={<Text style={styles.modalTitle}>{t("settings.language")}</Text>}
       >
-        <Pressable
-          style={styles.optionRow}
-          onPress={() => {
-            setLanguage("English");
-            setLanguageOpen(false);
-          }}
-        >
-          <Text style={styles.optionText}>🇬🇧 English</Text>
-          <Ionicons name="checkmark" size={18} color={colors.blueSoft} />
-        </Pressable>
+        <View style={styles.languageGrid}>
+          {LANGUAGES.map((option) => {
+            const selected = language === option.code;
+            return (
+              <Pressable
+                key={option.code}
+                accessibilityRole="radio"
+                accessibilityState={{ selected }}
+                style={({ pressed }) => [
+                  styles.languageCard,
+                  selected && styles.languageCardSelected,
+                  pressed && styles.pressed,
+                ]}
+                onPress={() => {
+                  setLanguage(option.code);
+                  setLanguageOpen(false);
+                }}
+              >
+                <View style={[styles.radioOuter, selected && styles.radioOuterSelected]}>
+                  {selected && <View style={styles.radioInner} />}
+                </View>
+                <View style={styles.languageCopy}>
+                  <Text style={styles.languageLabel} numberOfLines={1}>
+                    {option.label}
+                  </Text>
+                  <Text style={styles.languageSubLabel} numberOfLines={1}>
+                    {option.subLabel}
+                  </Text>
+                </View>
+              </Pressable>
+            );
+          })}
+        </View>
       </ModalFrame>
 
       <ModalFrame
         visible={themeOpen}
         onClose={() => setThemeOpen(false)}
         gap={4}
-        header={<Text style={styles.modalTitle}>Theme</Text>}
+        header={<Text style={styles.modalTitle}>{t("settings.theme")}</Text>}
       >
         {THEME_OPTIONS.map((option) => {
           const selected = mode === option.mode;
@@ -392,7 +422,7 @@ export default function SettingsPanel({ onOpenHowTo }: SettingsPanelProps) {
               }}
             >
               <Ionicons name={option.icon} size={20} color={colors.text} />
-              <Text style={styles.optionText}>{THEME_MODE_LABELS[option.mode]}</Text>
+              <Text style={styles.optionText}>{t(THEME_LABEL_KEYS[option.mode])}</Text>
               {selected && <Ionicons name="checkmark" size={18} color={colors.blueSoft} />}
             </Pressable>
           );
@@ -406,38 +436,34 @@ export default function SettingsPanel({ onOpenHowTo }: SettingsPanelProps) {
         header={<Text style={styles.modalTitle}>Filora</Text>}
         footer={
           <Pressable style={styles.modalClose} onPress={() => setAboutOpen(false)}>
-            <Text style={styles.modalCloseText}>Close</Text>
+            <Text style={styles.modalCloseText}>{t("common.close")}</Text>
           </Pressable>
         }
       >
-        <Text style={styles.modalBody}>Filora is the phone companion for Filora on Windows. Connect to a share on your PC and save files to your phone — no account required.</Text>
-        <Text style={styles.modalBody}>Use Global link when the PC is sharing over the internet. Paste the share URL or scan the Share QR. Mobile data works.</Text>
-        <Text style={styles.modalBody}>Use Local network on the same Wi-Fi or PC hotspot. Scan the Wi-Fi QR to join the PC network, then scan the Share QR or paste the local link.</Text>
-        <Text style={styles.modalBody}>If the share is password-protected, unlock it on your phone, browse the file list, and save files to your Filora folder. Light and dark themes, connection history, and permission controls are in Settings.</Text>
-        <Text style={styles.modalBody}>Requires Filora running on your Windows PC with files added to the share.</Text>
+        <Text style={styles.modalBody}>{t("settings.aboutP1")}</Text>
+        <Text style={styles.modalBody}>{t("settings.aboutP2")}</Text>
+        <Text style={styles.modalBody}>{t("settings.aboutP3")}</Text>
+        <Text style={styles.modalBody}>{t("settings.aboutP4")}</Text>
+        <Text style={styles.modalBody}>{t("settings.aboutP5")}</Text>
       </ModalFrame>
 
       <ModalFrame
         visible={privacyOpen}
         onClose={() => setPrivacyOpen(false)}
         gap={8}
-        header={<Text style={styles.modalTitle}>Privacy policy</Text>}
+        header={<Text style={styles.modalTitle}>{t("settings.privacy")}</Text>}
         footer={
           <Pressable style={styles.modalClose} onPress={() => setPrivacyOpen(false)}>
-            <Text style={styles.modalCloseText}>Close</Text>
+            <Text style={styles.modalCloseText}>{t("common.close")}</Text>
           </Pressable>
         }
       >
-        <Text style={styles.modalBody}>
-          Filora connects directly to Filora on your PC. It does not require an
-          account. Share links you paste and files you download stay on this device unless you
-          share them yourself. The app shows ads from Google AdMob.
-        </Text>
+        <Text style={styles.modalBody}>{t("settings.privacyBody")}</Text>
         <Pressable
           style={({ pressed }) => [styles.readMore, pressed && styles.pressed]}
           onPress={() => Linking.openURL(FILORA_PRIVACY_URL)}
         >
-          <Text style={styles.readMoreText}>Read more</Text>
+          <Text style={styles.readMoreText}>{t("common.readMore")}</Text>
           <Ionicons name="open-outline" size={15} color={colors.blueSoft} />
         </Pressable>
       </ModalFrame>
@@ -559,6 +585,62 @@ function createStyles(colors: ThemeColors) {
       color: colors.text,
       fontSize: 12,
       lineHeight: 16,
+    },
+    languageGrid: {
+      flexDirection: "row" as const,
+      flexWrap: "wrap" as const,
+      gap: 10,
+    },
+    languageCard: {
+      flexBasis: "47%" as const,
+      flexGrow: 1,
+      flexDirection: "row" as const,
+      alignItems: "center" as const,
+      gap: 10,
+      minHeight: 48,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      borderRadius: radius.lg,
+      borderWidth: 1.5,
+      borderColor: "transparent",
+      backgroundColor: colors.cardAlt,
+    },
+    languageCardSelected: {
+      borderColor: colors.blueSoft,
+    },
+    radioOuter: {
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+      borderWidth: 2,
+      borderColor: colors.textDim,
+      alignItems: "center" as const,
+      justifyContent: "center" as const,
+    },
+    radioOuterSelected: {
+      borderColor: colors.blueSoft,
+    },
+    radioInner: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+      backgroundColor: colors.blueSoft,
+    },
+    languageCopy: {
+      flex: 1,
+      minWidth: 0,
+    },
+    languageLabel: {
+      ...para(600),
+      color: colors.text,
+      fontSize: 14,
+      lineHeight: 20,
+    },
+    languageSubLabel: {
+      ...para(500),
+      color: colors.textMuted,
+      fontSize: 11,
+      lineHeight: 15,
     },
     pressed: {
       opacity: 0.7,
