@@ -2,7 +2,7 @@
   "expo": {
     "name": "Filora",
     "slug": "filora",
-    "version": "1.0.6",
+    "version": "1.0.12",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -14,7 +14,7 @@
       }
     },
     "android": {
-      "versionCode": 7,
+      "versionCode": 13,
       "adaptiveIcon": {
         "backgroundColor": "#0084FF",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -26,9 +26,6 @@
       "permissions": [
         "READ_EXTERNAL_STORAGE",
         "WRITE_EXTERNAL_STORAGE",
-        "READ_MEDIA_IMAGES",
-        "READ_MEDIA_VIDEO",
-        "READ_MEDIA_AUDIO",
         "android.permission.INTERNET",
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO",
@@ -36,8 +33,7 @@
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.NEARBY_WIFI_DEVICES",
         "android.permission.ACCESS_WIFI_STATE",
-        "android.permission.CHANGE_WIFI_STATE",
-        "android.permission.INTERNET"
+        "android.permission.CHANGE_WIFI_STATE"
       ],
       "package": "com.madarlabs.filora"
     },

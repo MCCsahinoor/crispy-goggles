@@ -241,32 +241,24 @@ export async function requestStoragePermission(): Promise<boolean> {
 
   const sdk = typeof Platform.Version === "number" ? Platform.Version : Number(Platform.Version);
 
-  // Android 11+ (API 30+) uses scoped storage; legacy permissions are not needed.
-  // The app uses SAF (Storage Access Framework) which doesn't require these permissions.
+  // Android 11+ uses scoped storage. Downloads go through SAF, which needs no media permissions.
   if (sdk >= 30) {
     return true;
   }
 
-  const permissions =
-    sdk >= 33
-      ? [
-          PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
-          PermissionsAndroid.PERMISSIONS.READ_MEDIA_VIDEO,
-        ]
-      : [
-          PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-        ];
-
-  const available = permissions.filter(Boolean);
-
   try {
     const result = await withTimeout(
-      PermissionsAndroid.requestMultiple(available),
+      PermissionsAndroid.requestMultiple([
+        PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+      ]),
       PERMISSION_TIMEOUT_MS,
       "Storage permission request timed out.",
     );
-    return available.some((permission) => result[permission] === PermissionsAndroid.RESULTS.GRANTED);
+    return (
+      result[PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE] === PermissionsAndroid.RESULTS.GRANTED ||
+      result[PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE] === PermissionsAndroid.RESULTS.GRANTED
+    );
   } catch {
     // Permission request timed out or failed; continue anyway since SAF will be used.
     return false;

@@ -65,11 +65,7 @@ async function getStorageGranted(): Promise<boolean> {
   if (androidSdk() >= 30) {
     return true;
   }
-  return isAndroidPermissionGranted(
-    androidSdk() >= 33
-      ? PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES
-      : PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-  );
+  return isAndroidPermissionGranted(PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE);
 }
 
 export async function getRequiredPermissions(): Promise<PermissionItem[]> {
