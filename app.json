@@ -2,7 +2,7 @@
   "expo": {
     "name": "Filora",
     "slug": "filora",
-    "version": "1.0.12",
+    "version": "1.0.13",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -14,7 +14,7 @@
       }
     },
     "android": {
-      "versionCode": 13,
+      "versionCode": 14,
       "adaptiveIcon": {
         "backgroundColor": "#0084FF",
         "foregroundImage": "./assets/android-icon-foreground.png",
