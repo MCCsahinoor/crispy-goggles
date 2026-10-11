@@ -3,10 +3,12 @@ import { StyleSheet, View } from "react-native";
 import { BannerAd, BannerAdSize } from "react-native-google-mobile-ads";
 
 import { getBannerUnitId } from "../lib/ads";
+import { useLayout } from "../lib/responsive";
 import { useThemedStyles, type ThemeColors } from "../theme";
 
 export default function AdBanner() {
   const styles = useThemedStyles(createStyles);
+  const layout = useLayout();
   const [adFailed, setAdFailed] = useState(false);
   const unitId = getBannerUnitId();
 
@@ -19,6 +21,9 @@ export default function AdBanner() {
       <BannerAd
         unitId={unitId}
         size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+        // The SDK measures the device with the system density; pass our (display-size-locked)
+        // layout width so the banner never ends up wider than the app.
+        width={Math.floor(layout.width)}
         onAdFailedToLoad={() => setAdFailed(true)}
       />
     </View>

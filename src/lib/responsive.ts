@@ -39,7 +39,8 @@ export function computeLayout(width: number, height: number): Layout {
 
   const gutter = isWide ? 32 : width >= TABLET_MIN_SHORT_SIDE ? 24 : isCompact ? 12 : 16;
   const contentMaxWidth = isWide ? 640 : width >= TABLET_MIN_SHORT_SIDE ? 560 : width;
-  const modalMaxWidth = Math.min(width - gutter * 2, isTablet ? 520 : 440);
+  // Keep dialogs inside the padded backdrop on narrow / high-density layouts.
+  const modalMaxWidth = Math.min(width - gutter * 2, isTablet ? 520 : isCompact ? width - gutter * 2 : 440);
 
   const columnWidth = Math.min(width, contentMaxWidth) - gutter * 2;
   // Leave room for the QR card padding (16 each side) and keep it scannable on short screens.

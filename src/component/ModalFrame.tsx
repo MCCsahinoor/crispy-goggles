@@ -1,6 +1,10 @@
 import type { ReactNode } from "react";
-import { Modal, Pressable, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Modal, Platform, Pressable, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
+import {
+  SafeAreaView,
+  initialWindowMetrics,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 import { t } from "../i18n";
 import { useLayout } from "../lib/responsive";
@@ -10,23 +14,30 @@ type ModalFrameProps = {
   visible: boolean;
   onClose: () => void;
   children: ReactNode;
-  /** Pinned above the scrolling body. */
   header?: ReactNode;
-  /** Pinned below the scrolling body (always visible). */
   footer?: ReactNode;
-  /** Wrap the body in a ScrollView when it can be taller than the screen. Default true. */
   scroll?: boolean;
-  /** Tapping the dimmed backdrop closes the dialog. Default true. */
   dismissOnBackdrop?: boolean;
-  /** Extra space between body children. */
   gap?: number;
   cardStyle?: StyleProp<ViewStyle>;
   accessibilityLabel?: string;
 };
 
+/** Modals often report 0 bottom inset; fall back to launch metrics or a nav-bar guess. */
+function effectiveBottomInset(bottom: number): number {
+  if (bottom > 0) {
+    return bottom;
+  }
+  const initial = initialWindowMetrics?.insets.bottom ?? 0;
+  if (initial > 0) {
+    return initial;
+  }
+  return Platform.OS === "android" ? 48 : 0;
+}
+
 /**
- * Shared dialog shell: centered card that respects safe areas, caps its width on tablets,
- * caps its height on short / landscape screens, and scrolls the body instead of clipping it.
+ * Dialog shell with a height-bounded card (absolute frame). The middle section scrolls;
+ * header and footer stay visible above the system navigation bar.
  */
 export default function ModalFrame({
   visible,
@@ -44,11 +55,21 @@ export default function ModalFrame({
   const insets = useSafeAreaInsets();
   const layout = useLayout();
 
-  const verticalPad = 12;
-  const maxCardHeight = Math.max(
-    240,
-    layout.height - insets.top - insets.bottom - verticalPad * 2,
-  );
+  const edge = 10;
+  const bottomInset = effectiveBottomInset(insets.bottom);
+  const padLeft = Math.max(layout.gutter, insets.left);
+  const padRight = Math.max(layout.gutter, insets.right);
+  const cardMaxWidth = Math.min(layout.modalMaxWidth, layout.width - padLeft - padRight);
+  const cardPadding = layout.isCompact ? 14 : 20;
+
+  const frameStyle = {
+    top: insets.top + edge,
+    bottom: bottomInset + edge,
+    left: padLeft,
+    right: padRight,
+  };
+
+  const bodyStyle = scroll ? styles.bodyScroll : styles.bodyStatic;
 
   return (
     <Modal
@@ -59,75 +80,97 @@ export default function ModalFrame({
       supportedOrientations={["portrait", "landscape"]}
       onRequestClose={onClose}
     >
-      <View
-        style={[
-          styles.backdrop,
-          {
-            paddingTop: insets.top + verticalPad,
-            paddingBottom: insets.bottom + verticalPad,
-            paddingLeft: Math.max(layout.gutter, insets.left),
-            paddingRight: Math.max(layout.gutter, insets.right),
-          },
-        ]}
-      >
-        {dismissOnBackdrop ? (
-          <Pressable
-            style={StyleSheet.absoluteFill}
-            onPress={onClose}
-            accessibilityLabel={accessibilityLabel}
-          />
-        ) : null}
-        <View
-          style={[
-            styles.card,
-            { width: "100%", maxWidth: layout.modalMaxWidth, maxHeight: maxCardHeight },
-            cardStyle,
-          ]}
-        >
-          {header}
-          {scroll ? (
-            <ScrollView
-              style={styles.body}
-              contentContainerStyle={{ gap }}
-              showsVerticalScrollIndicator
-              nestedScrollEnabled
-              keyboardShouldPersistTaps="handled"
-              bounces={false}
+      <SafeAreaView style={styles.safeRoot} edges={[]}>
+        <View style={styles.backdrop}>
+          {dismissOnBackdrop ? (
+            <Pressable
+              style={StyleSheet.absoluteFill}
+              onPress={onClose}
+              accessibilityLabel={accessibilityLabel}
+            />
+          ) : null}
+
+          <View style={[styles.frame, frameStyle]} pointerEvents="box-none">
+            <View
+              style={[
+                styles.card,
+                { padding: cardPadding, maxWidth: cardMaxWidth },
+                cardStyle,
+              ]}
             >
-              {children}
-            </ScrollView>
-          ) : (
-            <View style={[styles.body, { gap }]}>{children}</View>
-          )}
-          {footer}
+              {header ? <View style={styles.headerShell}>{header}</View> : null}
+              {scroll ? (
+                <ScrollView
+                  style={bodyStyle}
+                  contentContainerStyle={{ gap, paddingBottom: 4 }}
+                  showsVerticalScrollIndicator
+                  nestedScrollEnabled
+                  keyboardShouldPersistTaps="handled"
+                  bounces={false}
+                >
+                  {children}
+                </ScrollView>
+              ) : (
+                <ScrollView
+                  style={bodyStyle}
+                  contentContainerStyle={{ gap }}
+                  showsVerticalScrollIndicator={false}
+                  nestedScrollEnabled
+                  keyboardShouldPersistTaps="handled"
+                  bounces={false}
+                >
+                  {children}
+                </ScrollView>
+              )}
+              {footer ? <View style={styles.footerShell}>{footer}</View> : null}
+            </View>
+          </View>
         </View>
-      </View>
+      </SafeAreaView>
     </Modal>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return {
+    safeRoot: {
+      flex: 1,
+    },
     backdrop: {
       flex: 1,
       backgroundColor: colors.overlay,
+    },
+    frame: {
+      position: "absolute" as const,
       alignItems: "center" as const,
-      justifyContent: "center" as const,
+      zIndex: 1,
     },
     card: {
+      width: "100%" as const,
+      height: "100%" as const,
+      flexDirection: "column" as const,
       backgroundColor: colors.card,
       borderRadius: radius.lg,
-      padding: 20,
       gap: 10,
       borderWidth: 1,
       borderColor: colors.border,
       overflow: "hidden" as const,
-      zIndex: 1,
       elevation: 8,
     },
-    body: {
-      flexGrow: 0,
-      flexShrink: 1,
+    headerShell: {
+      flexShrink: 0,
+    },
+    footerShell: {
+      flexShrink: 0,
+      paddingTop: 4,
+    },
+    bodyScroll: {
+      flex: 1,
+      minHeight: 0,
+    },
+    bodyStatic: {
+      flex: 1,
+      minHeight: 0,
     },
   };
 }

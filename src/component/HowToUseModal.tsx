@@ -126,19 +126,16 @@ export default function HowToUseModal({ visible, onClose }: HowToUseModalProps) 
       gap={14}
       accessibilityLabel={t("howto.close")}
       header={
-        <View style={styles.header}>
-          <View style={styles.titleRow}>
-            <Text style={styles.title}>{t("howto.title")}</Text>
-            <Pressable
-              onPress={onClose}
-              hitSlop={12}
-              style={({ pressed }) => [styles.iconClose, pressed && styles.pressed]}
-              accessibilityLabel={t("common.close")}
-            >
-              <Ionicons name="close" size={20} color={colors.textMuted} />
-            </Pressable>
-          </View>
-          <Text style={styles.intro}>{t("howto.intro")}</Text>
+        <View style={styles.titleRow}>
+          <Text style={styles.title}>{t("howto.title")}</Text>
+          <Pressable
+            onPress={onClose}
+            hitSlop={12}
+            style={({ pressed }) => [styles.iconClose, pressed && styles.pressed]}
+            accessibilityLabel={t("common.close")}
+          >
+            <Ionicons name="close" size={20} color={colors.textMuted} />
+          </Pressable>
         </View>
       }
       footer={
@@ -162,6 +159,7 @@ export default function HowToUseModal({ visible, onClose }: HowToUseModalProps) 
         </View>
       }
     >
+      <Text style={styles.intro}>{t("howto.intro")}</Text>
       {STEPS.map((step) => (
         <View key={step.number} style={styles.stepRow}>
           <View style={styles.stepBadge}>
@@ -188,9 +186,6 @@ export default function HowToUseModal({ visible, onClose }: HowToUseModalProps) 
 
 function createStyles(colors: ThemeColors) {
   return {
-    header: {
-      gap: 8,
-    },
     titleRow: {
       flexDirection: "row" as const,
       alignItems: "center" as const,
