@@ -1,3 +1,4 @@
+import "./src/lib/cryptoPolyfill";
 import { registerRootComponent } from "expo";
 import * as SplashScreen from "expo-splash-screen";
 

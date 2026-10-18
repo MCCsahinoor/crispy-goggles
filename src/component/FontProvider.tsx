@@ -19,22 +19,22 @@ import {
   Poppins_900Black_Italic,
 } from "@expo-google-fonts/poppins";
 import {
-  Raleway_400Regular,
-  Raleway_500Medium,
-  Raleway_600SemiBold,
-  Raleway_700Bold,
+  Roboto_400Regular,
+  Roboto_500Medium,
+  Roboto_600SemiBold,
+  Roboto_700Bold,
   useFonts,
-} from "@expo-google-fonts/raleway";
+} from "@expo-google-fonts/roboto";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import type { ReactNode } from "react";
 
 export function FontProvider({ children }: { children: ReactNode }) {
   const [loaded] = useFonts({
-    Raleway_400Regular,
-    Raleway_500Medium,
-    Raleway_600SemiBold,
-    Raleway_700Bold,
+    Roboto_400Regular,
+    Roboto_500Medium,
+    Roboto_600SemiBold,
+    Roboto_700Bold,
     Poppins_100Thin,
     Poppins_100Thin_Italic,
     Poppins_200ExtraLight,

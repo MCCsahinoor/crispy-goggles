@@ -16,6 +16,12 @@ module.exports = function withReleaseBuild(config) {
       );
     }
 
+    // R8 only applies its full optimizations with the "-optimize" default rules file.
+    contents = contents.replace(
+      'getDefaultProguardFile("proguard-android.txt")',
+      'getDefaultProguardFile("proguard-android-optimize.txt")',
+    );
+
     mod.modResults.contents = contents;
     return mod;
   });

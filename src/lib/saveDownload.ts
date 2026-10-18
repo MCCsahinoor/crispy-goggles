@@ -448,6 +448,28 @@ async function copyToSafFolder(folderUri: string, localUri: string, fileName: st
   }
 }
 
+/**
+ * Best-effort copy of a file already saved in the app's own folder into the public
+ * Documents/Filora folder — the exact fallback chain "Connect to PC" downloads use (direct
+ * write first, then a remembered or freshly granted SAF folder). Used by the phone-to-phone
+ * receiver so files land in the same place regardless of how they arrived.
+ */
+export async function copyToPublicFiloraFolder(
+  localUri: string,
+  fileName: string,
+  callbacks?: SaveProgressCallbacks,
+): Promise<boolean> {
+  const direct = await tryDirectPublicFileDrop(localUri, fileName);
+  if (direct) {
+    return true;
+  }
+  const safFolder = await ensurePublicFileDropFolder(callbacks?.onAwaitingUser);
+  if (!safFolder) {
+    return false;
+  }
+  return copyToSafFolder(safFolder, localUri, fileName);
+}
+
 export async function saveFileToAppFolder(
   url: string,
   fileName: string,

@@ -1,6 +1,8 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
+import type { ReactNode } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { t } from "../i18n";
 import { Text, TextInput } from "../lib/disableFontScaling";
@@ -121,6 +123,69 @@ export function ConnectButton({ onPress, disabled, label = t("common.connect") }
           {label}
         </Text>
       </LinearGradient>
+    </Pressable>
+  );
+}
+
+type AppHeaderProps = {
+  /** Left-aligned, bold, white. */
+  title: string;
+  /** Second line under the title, dimmer white. */
+  subtitle?: string;
+  /** Shows a round white back button when provided. */
+  onBack?: () => void;
+  /** Rendered after the back button, before the title (e.g. a small logo). */
+  leftAccessory?: ReactNode;
+  /** Right-aligned content, e.g. a HeaderIconButton or a badge. */
+  right?: ReactNode;
+};
+
+/** Rounded-bottom gradient bar used at the top of every screen: round back button, bold left-aligned title, optional right action. */
+export function AppHeader({ title, subtitle, onBack, leftAccessory, right }: AppHeaderProps) {
+  const styles = useThemedStyles(createUiStyles);
+  const insets = useSafeAreaInsets();
+  return (
+    <LinearGradient
+      colors={gradients.connect}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={[styles.appHeader, { paddingTop: insets.top + 10 }]}
+    >
+      <View style={styles.appHeaderRow}>
+        {onBack && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t("common.back")}
+            onPress={onBack}
+            hitSlop={10}
+            style={({ pressed }) => [styles.appHeaderCircle, pressed && styles.pressed]}
+          >
+            <Ionicons name="arrow-back" size={17} color="#15202B" />
+          </Pressable>
+        )}
+        {leftAccessory}
+        <View style={styles.appHeaderCopy}>
+          <Text style={styles.appHeaderTitle} numberOfLines={1}>{title}</Text>
+          {!!subtitle && <Text style={styles.appHeaderSubtitle} numberOfLines={1}>{subtitle}</Text>}
+        </View>
+        {right}
+      </View>
+    </LinearGradient>
+  );
+}
+
+type HeaderIconButtonProps = {
+  icon: keyof typeof Ionicons.glyphMap;
+  onPress: () => void;
+  label: string;
+};
+
+/** A plain white icon button for the right side of an AppHeader (no circle background). */
+export function HeaderIconButton({ icon, onPress, label }: HeaderIconButtonProps) {
+  const styles = useThemedStyles(createUiStyles);
+  return (
+    <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress} hitSlop={10} style={({ pressed }) => pressed && styles.pressed}>
+      <Ionicons name={icon} size={22} color="#FFFFFF" />
     </Pressable>
   );
 }
@@ -453,6 +518,42 @@ function createUiStyles(colors: ThemeColors) {
     },
     disabled: {
       opacity: 0.55,
+    },
+    appHeader: {
+      paddingTop: 10,
+      paddingBottom: 14,
+      paddingHorizontal: 14,
+    },
+    appHeaderRow: {
+      flexDirection: "row" as const,
+      alignItems: "center" as const,
+      gap: 10,
+    },
+    appHeaderCircle: {
+      width: 34,
+      height: 34,
+      borderRadius: 17,
+      backgroundColor: "#FFFFFF",
+      alignItems: "center" as const,
+      justifyContent: "center" as const,
+    },
+    appHeaderCopy: {
+      flex: 1,
+      gap: 1,
+      justifyContent: "center" as const,
+    },
+    appHeaderTitle: {
+      ...heading(700),
+      color: "#FFFFFF",
+      fontSize: 17,
+      lineHeight: 20,
+      textAlign: "left" as const,
+    },
+    appHeaderSubtitle: {
+      ...para(500),
+      color: "rgba(255,255,255,0.82)",
+      fontSize: 10,
+      lineHeight: 13,
     },
   };
 }

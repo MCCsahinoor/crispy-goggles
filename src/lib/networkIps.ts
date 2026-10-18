@@ -19,15 +19,6 @@ export async function listLocalIpv4(): Promise<string[]> {
   }
 
   try {
-    const wifiIp = await WifiManager.getIP();
-    if (usableIp(wifiIp)) {
-      ips.add(wifiIp);
-    }
-  } catch {
-    // Ignore — hotspot mode often returns 0.0.0.0 here.
-  }
-
-  try {
     const listed = await native?.getNetworkIpv4?.();
     if (Array.isArray(listed)) {
       for (const ip of listed) {
@@ -38,6 +29,15 @@ export async function listLocalIpv4(): Promise<string[]> {
     }
   } catch {
     // Ignore.
+  }
+
+  try {
+    const wifiIp = await WifiManager.getIP();
+    if (usableIp(wifiIp)) {
+      ips.add(wifiIp);
+    }
+  } catch {
+    // Ignore — hotspot mode often returns 0.0.0.0 here.
   }
 
   return [...ips];

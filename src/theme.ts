@@ -20,10 +20,10 @@ import {
 import { isNonLatinLanguage, useI18n } from "./i18n";
 
 export const fontFamily = {
-  bodyRegular: "Raleway_400Regular",
-  bodyMedium: "Raleway_500Medium",
-  bodySemiBold: "Raleway_600SemiBold",
-  bodyBold: "Raleway_700Bold",
+  bodyRegular: "Roboto_400Regular",
+  bodyMedium: "Roboto_500Medium",
+  bodySemiBold: "Roboto_600SemiBold",
+  bodyBold: "Roboto_700Bold",
 } as const;
 
 const poppinsFamily = {
@@ -55,7 +55,7 @@ export type BodyFontWeight = 400 | 500 | 600 | 700;
 type FontStyleResult = Pick<TextStyle, "fontFamily" | "fontWeight" | "fontStyle">;
 
 /**
- * Raleway/Poppins only contain Latin glyphs. For Hindi and Bengali we leave the family unset so the
+ * Roboto/Poppins only contain Latin glyphs. For Hindi and Bengali we leave the family unset so the
  * system font (Noto Sans Devanagari / Bengali) renders the text, and express weight via fontWeight.
  */
 function systemFont(weight: number, italic = false): FontStyleResult {
@@ -63,7 +63,7 @@ function systemFont(weight: number, italic = false): FontStyleResult {
   return italic ? { fontWeight, fontStyle: "italic" } : { fontWeight };
 }
 
-/** Raleway for paragraph and UI copy. Omit on header/title styles. */
+/** Roboto for paragraph and UI copy. Omit on header/title styles. */
 export function para(weight: BodyFontWeight = 400): FontStyleResult {
   if (isNonLatinLanguage()) {
     return systemFont(weight);
@@ -71,7 +71,7 @@ export function para(weight: BodyFontWeight = 400): FontStyleResult {
   return latinPara(weight);
 }
 
-/** Always Raleway, for text that is never translated (e.g. the header tagline). */
+/** Always Roboto, for text that is never translated (e.g. the header tagline). */
 export function latinPara(weight: BodyFontWeight = 400): FontStyleResult {
   switch (weight) {
     case 700:
@@ -190,7 +190,7 @@ export const lightColors: ThemeColors = {
 };
 
 export const gradients = {
-  connect: ["#3B82F6", "#A855F7"] as const,
+  connect: ["#1D4ED8", "#7E22CE"] as const,
   logo: ["#2563EB", "#4F8CFF"] as const,
   globe: ["#60A5FA", "#2563EB"] as const,
   router: ["#312E81", "#1E1B4B"] as const,

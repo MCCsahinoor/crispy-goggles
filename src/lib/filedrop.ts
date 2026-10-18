@@ -81,11 +81,14 @@ async function endLocalWifiRoute(url: string): Promise<void> {
   }
 }
 
+/** Answers from the other side, not routing failures: retrying would only ask the question again. */
+const FINAL_ERRORS = new Set(["cancelled", "rejected", "expired", "invalid"]);
+
 export async function withLocalWifiRoute<T>(url: string, fn: () => Promise<T>): Promise<T> {
   try {
     return await fn();
   } catch (error) {
-    if (!urlNeedsLocalWifiRoute(url)) {
+    if (!urlNeedsLocalWifiRoute(url) || (error instanceof Error && FINAL_ERRORS.has(error.message))) {
       throw error;
     }
   }

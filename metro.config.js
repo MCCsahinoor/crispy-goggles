@@ -9,4 +9,8 @@ const config = getDefaultConfig(__dirname);
  */
 config.cacheVersion = "filora-v2";
 
+// CMake writes broken directory names under android/app/.cxx (for example D_\CoDe).
+// Metro's Windows watcher crashes with ENOENT if it tries to watch those folders.
+config.resolver.blockList.push(/[/\\]\.cxx(?:[/\\]|$)/);
+
 module.exports = config;

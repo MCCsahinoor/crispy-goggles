@@ -49,7 +49,7 @@ export function getLanguage(): Language {
   return currentLanguage;
 }
 
-/** Hindi and Bengali need system fonts: Raleway/Poppins have no Devanagari or Bengali glyphs. */
+/** Hindi and Bengali need system fonts: Roboto/Poppins have no Devanagari or Bengali glyphs. */
 export function isNonLatinLanguage(language: Language = currentLanguage): boolean {
   return language !== "en";
 }

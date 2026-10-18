@@ -29,10 +29,13 @@ import FilesPanel from "./src/component/FilesPanel";
 import GlobalConnectPanel from "./src/component/GlobalConnectPanel";
 import HistoryPanel, { HistoryEntry } from "./src/component/HistoryPanel";
 import HowToUseModal from "./src/component/HowToUseModal";
+import LaunchScreen from "./src/component/LaunchScreen";
+import PhoneShareFlow from "./src/component/PhoneShareFlow";
 import LocationRequiredModal from "./src/component/LocationRequiredModal";
 import LocalConnectPanel from "./src/component/LocalConnectPanel";
 import SendPanel from "./src/component/SendPanel";
 import SettingsPanel from "./src/component/SettingsPanel";
+import { AppHeader, HeaderIconButton } from "./src/component/ui";
 import {
   ConnectionMode,
   downloadUrl,
@@ -75,6 +78,7 @@ import {
 } from "./src/theme";
 
 type Screen = "connect" | "password" | "files";
+type EntryTarget = "choose" | "pc" | "phone";
 type ScanPurpose = "share" | "wifi";
 type HomeTab = "connect" | "send" | "history" | "settings";
 
@@ -109,9 +113,13 @@ function AppShell() {
     styles.footerColumn,
     { maxWidth: layout.contentMaxWidth, paddingHorizontal: layout.gutter },
   ];
+  const [entry, setEntry] = useState<EntryTarget>("choose");
   const [screen, setScreen] = useState<Screen>("connect");
   const [homeTab, setHomeTab] = useState<HomeTab>("connect");
-  const [helpOpen, setHelpOpen] = useState(true);
+  // Opened from the settings icon on any header; renders over whatever screen was showing.
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
+  const helpShownRef = useRef(false);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [connectionMode, setConnectionMode] = useState<ConnectionMode>("global");
   const [connection, setConnection] = useState<ShareConnection | null>(null);
@@ -509,6 +517,19 @@ function AppShell() {
     await runAfterLocationReady(performWifiConnect);
   }, [performWifiConnect, runAfterLocationReady, wifiDetails]);
 
+  const openPc = useCallback(() => {
+    setEntry("pc");
+    if (!helpShownRef.current) {
+      helpShownRef.current = true;
+      setHelpOpen(true);
+    }
+  }, []);
+
+  const backToChooser = useCallback(() => {
+    resetSession();
+    setEntry("choose");
+  }, [resetSession]);
+
   const scanTitle =
     scanPurpose === "wifi"
       ? t("scan.wifiTitle")
@@ -529,56 +550,77 @@ function AppShell() {
           : undefined
       }
     >
-      {scanning ? (
-        <View style={styles.scanContainer}>
+      {settingsOpen ? (
+        <SafeAreaView style={styles.container} edges={["bottom", "left", "right"]}>
           <StatusBar style="light" />
-          <CameraView style={styles.camera} barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
-            onBarcodeScanned={
-              scanning
-                ? ({ data, raw }) => {
-                  handleScanResult(raw ?? data);
-                }
-                : undefined
-            }
+          <LinearGradient
+            colors={["rgba(59,130,246,0.16)", "transparent"]}
+            style={styles.ambientGlow}
           />
-          <SafeAreaView
-            edges={["bottom", "left", "right"]}
-            style={[styles.scanOverlay, { paddingHorizontal: layout.gutter }]}
-          >
-            <Text style={[styles.scanTitle, { maxWidth: layout.contentMaxWidth }]}>{scanTitle}</Text>
-            <Pressable style={({ pressed }) => [styles.scanCancel, pressed && styles.pressed]} onPress={() => setScanning(false)} >
-              <Text style={styles.scanCancelText}>{t("common.cancel")}</Text>
-            </Pressable>
-          </SafeAreaView>
-        </View>
+          <View style={columnStyle}>
+            <View style={{ marginHorizontal: -layout.gutter, marginBottom: 14 }}>
+              <AppHeader
+                title="Filora"
+                subtitle={t("tab.settings")}
+                onBack={() => setSettingsOpen(false)}
+                leftAccessory={
+                  <Image source={require("./assets/logo.png")} style={styles.logo} accessibilityLabel="Filora" />
+                }
+              />
+            </View>
+            <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+              <SettingsPanel onOpenHowTo={() => setHelpOpen(true)} />
+            </ScrollView>
+          </View>
+        </SafeAreaView>
+      ) : entry === "choose" || entry === "phone" ? (
+        <SafeAreaView
+          style={styles.container}
+          edges={entry === "phone" ? ["bottom", "left", "right"] : ["top", "bottom", "left", "right"]}
+        >
+          <StatusBar style={entry === "phone" ? "light" : scheme === "dark" ? "light" : "dark"} />
+          <LinearGradient
+            colors={["rgba(59,130,246,0.16)", "transparent"]}
+            style={styles.ambientGlow}
+          />
+          {entry === "choose" ? (
+            <LaunchScreen onSelectPc={openPc} onSelectPhone={() => setEntry("phone")} />
+          ) : (
+            <PhoneShareFlow onBack={() => setEntry("choose")} onOpenSettings={() => setSettingsOpen(true)} />
+          )}
+        </SafeAreaView>
       ) : (
-        <SafeAreaView style={styles.container} edges={["top", "bottom", "left", "right"]}>
-          <StatusBar style={scheme === "dark" ? "light" : "dark"} />
+        <SafeAreaView style={styles.container} edges={["bottom", "left", "right"]}>
+          <StatusBar style="light" />
           <LinearGradient colors={[glowColor, "transparent"]} style={styles.ambientGlow} />
 
           <View style={columnStyle}>
-          <View style={styles.header}>
-            <View style={styles.headerLeft}>
-              <Image
-                source={require("./assets/logo.png")}
-                style={styles.logo}
-                accessibilityLabel="Filora"
-              />
-              <View style={styles.headerText}>
-                <Text style={styles.title}>Filora</Text>
-                <Text style={styles.subtitle}>Connect to Filora on your PC</Text>
-              </View>
-            </View>
-            {screen === "files" ? (
-              <View style={styles.connectedBadge}>
-                <View style={styles.connectedDot} />
-                <Text style={styles.connectedBadgeText}>{t("ui.connected")}</Text>
-              </View>
-            ) : (
-              <Pressable onPress={() => setHelpOpen(true)} hitSlop={10} style={({ pressed }) => pressed && styles.pressed} >
-                <Ionicons name="help-circle-outline" size={26} color={colors.text} />
-              </Pressable>
-            )}
+          <View style={{ marginHorizontal: -layout.gutter, marginBottom: 14 }}>
+            <AppHeader
+              title="Filora"
+              subtitle="Connect to Filora on your PC"
+              onBack={screen === "connect" ? backToChooser : undefined}
+              leftAccessory={
+                <Image
+                  source={require("./assets/logo.png")}
+                  style={styles.logo}
+                  accessibilityLabel="Filora"
+                />
+              }
+              right={
+                <View style={styles.headerRightRow}>
+                  {screen === "files" ? (
+                    <View style={styles.connectedBadge}>
+                      <View style={styles.connectedDot} />
+                      <Text style={styles.connectedBadgeText}>{t("ui.connected")}</Text>
+                    </View>
+                  ) : (
+                    <HeaderIconButton icon="help-circle-outline" label="Help" onPress={() => setHelpOpen(true)} />
+                  )}
+                  <HeaderIconButton icon="settings-outline" label={t("tab.settings")} onPress={() => setSettingsOpen(true)} />
+                </View>
+              }
+            />
           </View>
 
           {screen === "connect" && (
@@ -789,6 +831,36 @@ function AppShell() {
       <HowToUseModal visible={helpOpen} onClose={() => setHelpOpen(false)} />
 
       <Modal
+        visible={scanning}
+        animationType="slide"
+        statusBarTranslucent
+        supportedOrientations={["portrait", "landscape"]}
+        onRequestClose={() => setScanning(false)}
+      >
+        <View style={styles.scanContainer}>
+          <StatusBar style="light" />
+          {scanning && (
+            <CameraView
+              style={styles.camera}
+              barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
+              onBarcodeScanned={({ data, raw }) => {
+                handleScanResult(raw ?? data);
+              }}
+            />
+          )}
+          <SafeAreaView
+            edges={["top", "bottom", "left", "right"]}
+            style={[styles.scanOverlay, { paddingHorizontal: layout.gutter }]}
+          >
+            <Text style={[styles.scanTitle, { maxWidth: layout.contentMaxWidth }]}>{scanTitle}</Text>
+            <Pressable style={({ pressed }) => [styles.scanCancel, pressed && styles.pressed]} onPress={() => setScanning(false)} >
+              <Text style={styles.scanCancelText}>{t("common.cancel")}</Text>
+            </Pressable>
+          </SafeAreaView>
+        </View>
+      </Modal>
+
+      <Modal
         transparent
         visible={loading && !scanning}
         animationType="fade"
@@ -854,10 +926,13 @@ function createStyles(colors: ThemeColors) {
       gap: 12,
     },
     logo: {
-      width: 42,
-      height: 42,
-      borderRadius: 12,
+      width: 34,
+      height: 34,
+      borderRadius: 10,
       overflow: "hidden",
+      backgroundColor: "#FFFFFF",
+      padding: 5,
+      resizeMode: "contain" as const,
     },
     headerText: {
       flex: 1,
@@ -873,6 +948,11 @@ function createStyles(colors: ThemeColors) {
       fontSize: 10,
       lineHeight: 14,
       color: colors.textMuted,
+    },
+    headerRightRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 14,
     },
     connectedBadge: {
       flexDirection: "row",
