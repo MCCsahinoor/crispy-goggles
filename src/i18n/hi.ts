@@ -1,4 +1,4 @@
-import type { Dictionary } from "./index";
+import type { Dictionary } from ".";
 
 /** Hindi (हिन्दी). App name, tagline and product names (Filora Desktop, Filora.exe) stay in English. */
 export const hi: Dictionary = {
@@ -201,6 +201,13 @@ export const hi: Dictionary = {
   "picker.browse": "फ़ाइलें ब्राउज़ करें",
   "picker.browseHint": "इस फ़ोन के दस्तावेज़, आर्काइव और अन्य फ़ाइलें।",
   "picker.filesEmpty": "अभी कोई फ़ाइल नहीं चुनी गई। जोड़ने के लिए फ़ाइलें ब्राउज़ करें पर टैप करें।",
+  "picker.tabMedia": "फ़ोटो और वीडियो",
+  "picker.browseMedia": "फ़ोटो और वीडियो चुनें",
+  "picker.browseMediaHint": "Android फ़ोटो पिकर खुलता है। Filora सिर्फ़ वही देख पाता है जो आप चुनते हैं।",
+  "picker.mediaEmpty": "अभी कुछ नहीं चुना गया। जोड़ने के लिए फ़ोटो और वीडियो चुनें पर टैप करें।",
+  "picker.browseMusic": "संगीत चुनें",
+  "picker.browseMusicHint": "इस फ़ोन पर मौजूद ऑडियो फ़ाइलें।",
+  "picker.musicEmpty": "अभी कोई संगीत नहीं चुना गया। जोड़ने के लिए संगीत चुनें पर टैप करें।",
   "picker.clearAll": "सभी हटाएँ",
   "picker.tooMany": "एक बार में अधिकतम {max} फ़ाइलें भेज सकते हैं।",
   "picker.skipped": "{count} फ़ाइलें पढ़ी नहीं जा सकीं और छोड़ दी गईं।",

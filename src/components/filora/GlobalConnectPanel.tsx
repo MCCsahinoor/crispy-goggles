@@ -1,0 +1,92 @@
+import {
+  ConnectButton,
+  GlobeHero,
+  OrDivider,
+  ScanActionCard,
+  ShareLinkField,
+} from "../common/ui";
+import { StyleSheet, View } from "react-native";
+
+import { t } from "../../i18n";
+import { Text } from "../../utils/disableFontScaling";
+
+import { heading, para, useThemedStyles, type ThemeColors } from "../../theme";
+
+type GlobalConnectPanelProps = {
+  shareUrl: string;
+  onShareUrlChange: (url: string) => void;
+  onPasteUrl: () => void;
+  onConnect: () => void;
+  onScanShare: () => void;
+  loading: boolean;
+};
+
+export default function GlobalConnectPanel({
+  shareUrl,
+  onShareUrlChange,
+  onPasteUrl,
+  onConnect,
+  onScanShare,
+  loading,
+}: GlobalConnectPanelProps) {
+  const styles = useThemedStyles(createStyles);
+  return (
+    <View style={styles.panel}>
+      <View style={styles.heroRow}>
+        <GlobeHero compact />
+        <View style={styles.heroCopy}>
+          <Text style={styles.heroTitle}>{t("global.title")}</Text>
+          <Text style={styles.heroText}>{t("global.body")}</Text>
+        </View>
+      </View>
+
+      <ShareLinkField
+        value={shareUrl}
+        onChangeText={onShareUrlChange}
+        onPaste={onPasteUrl}
+        placeholder="https://aaaa.trycloudflare/s/..."
+      />
+      <ConnectButton onPress={onConnect} disabled={loading} />
+      <OrDivider />
+      <ScanActionCard
+        icon="qr-code-outline"
+        title={t("scanCard.shareTitle")}
+        subtitle={t("global.scanShareSubtitle")}
+        onPress={onScanShare}
+        disabled={loading}
+      />
+    </View>
+  );
+}
+
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+  panel: {
+    gap: 16,
+    paddingBottom: 8,
+  },
+  heroRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginBottom: 4,
+  },
+  heroCopy: {
+    flex: 1,
+    gap: 6,
+    minWidth: 0,
+  },
+  heroTitle: {
+    ...heading(600),
+    color: colors.text,
+    fontSize: 16,
+    lineHeight: 23,
+  },
+  heroText: {
+    ...para(500),
+    color: colors.textMuted,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+});
+}

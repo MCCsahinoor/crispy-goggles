@@ -1,4 +1,4 @@
-import type { Dictionary } from "./index";
+import type { Dictionary } from ".";
 
 /** Tamil (தமிழ்). App name, tagline and product names (Filora Desktop, Filora.exe) stay in English. */
 export const ta: Dictionary = {
@@ -194,6 +194,13 @@ export const ta: Dictionary = {
   "picker.browse": "கோப்புகளை உலாவு",
   "picker.browseHint": "இந்த ஃபோனில் உள்ள ஆவணங்கள், காப்பகங்கள் மற்றும் பிற கோப்புகள்.",
   "picker.filesEmpty": "இன்னும் கோப்புகள் தேர்ந்தெடுக்கப்படவில்லை. சேர்க்க கோப்புகளை உலாவு என்பதைத் தட்டவும்.",
+  "picker.tabMedia": "படங்கள் & வீடியோக்கள்",
+  "picker.browseMedia": "படங்கள் & வீடியோக்களைத் தேர்ந்தெடுக்கவும்",
+  "picker.browseMediaHint": "Android ஃபோட்டோ பிக்கர் திறக்கும். நீங்கள் தேர்ந்தெடுப்பதை மட்டுமே Filora பார்க்கும்.",
+  "picker.mediaEmpty": "இன்னும் எதுவும் தேர்ந்தெடுக்கப்படவில்லை. சேர்க்க படங்கள் & வீடியோக்களைத் தேர்ந்தெடுக்கவும் என்பதைத் தட்டவும்.",
+  "picker.browseMusic": "இசையைத் தேர்ந்தெடுக்கவும்",
+  "picker.browseMusicHint": "இந்த ஃபோனில் உள்ள ஆடியோ கோப்புகள்.",
+  "picker.musicEmpty": "இன்னும் இசை தேர்ந்தெடுக்கப்படவில்லை. சேர்க்க இசையைத் தேர்ந்தெடுக்கவும் என்பதைத் தட்டவும்.",
   "picker.clearAll": "அனைத்தையும் நீக்கு",
   "picker.tooMany": "ஒரே நேரத்தில் அதிகபட்சம் {max} கோப்புகளை அனுப்பலாம்.",
   "picker.skipped": "{count} கோப்புகளைப் படிக்க முடியவில்லை, தவிர்க்கப்பட்டன.",

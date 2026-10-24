@@ -53,3 +53,33 @@ filedrop-mobile/
 ├── src/lib/filedrop.ts  # API client for FileDrop server
 └── app.json             # Expo config + camera permission
 ```
+
+## Project structure
+
+```
+app/                       Expo Router routes. Each file is a thin page that renders one screen component.
+  _layout.tsx              Root layout (providers, app-wide hooks, Stack)
+  index.tsx                Launch screen: choose PC or phone
+  pc/                      Share with a PC
+    _layout.tsx            Shell: header, footer, modals, shared session
+    index.tsx              Step 1: connect (link or QR)
+    password.tsx           Step 2: unlock (password-protected shares)
+    files.tsx              Step 3: shared files
+  phone.tsx                Share phone to phone
+  settings.tsx             Settings
+  +not-found.tsx           404 screen
+src/
+  components/common/       Shared UI (ui, ModalFrame, FontProvider, AdBanner, picker, AppButton, ...)
+  components/layout/       ScreenContainer
+  components/filora/       Filora screens and their parts (PcHeader, ConnectView, PasswordView, ...)
+  features/filora/
+    hooks/                 usePcSession (state and handlers for the PC flow)
+    services/phone/        Phone-to-phone protocol, discovery, sender and receiver
+    utils/                 Navigation helpers
+  services/                api, device, ads, updates, storage
+  hooks/ utils/ constants/ theme/ i18n/
+assets/                    images, icons, fonts, animations
+tests/                     unit, integration
+```
+
+Imports use the `@/` alias for `src/` in new code.

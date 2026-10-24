@@ -1,4 +1,4 @@
-import type { Dictionary } from "./index";
+import type { Dictionary } from ".";
 
 /** Bengali (বাংলা). App name, tagline and product names (Filora Desktop, Filora.exe) stay in English. */
 export const bn: Dictionary = {
@@ -194,6 +194,13 @@ export const bn: Dictionary = {
   "picker.browse": "ফাইল ব্রাউজ করুন",
   "picker.browseHint": "এই ফোনের ডকুমেন্ট, আর্কাইভ ও অন্যান্য ফাইল।",
   "picker.filesEmpty": "এখনও কোনো ফাইল বাছা হয়নি। যোগ করতে ফাইল ব্রাউজ করুন-এ ট্যাপ করুন।",
+  "picker.tabMedia": "ছবি ও ভিডিও",
+  "picker.browseMedia": "ছবি ও ভিডিও বেছে নিন",
+  "picker.browseMediaHint": "Android ফটো পিকার খোলে। আপনি যা বেছে নেবেন, Filora শুধু সেটুকুই দেখতে পায়।",
+  "picker.mediaEmpty": "এখনও কিছু বাছা হয়নি। যোগ করতে ছবি ও ভিডিও বেছে নিন-এ ট্যাপ করুন।",
+  "picker.browseMusic": "গান বেছে নিন",
+  "picker.browseMusicHint": "এই ফোনে থাকা অডিও ফাইল।",
+  "picker.musicEmpty": "এখনও কোনো গান বাছা হয়নি। যোগ করতে গান বেছে নিন-এ ট্যাপ করুন।",
   "picker.clearAll": "সব মুছুন",
   "picker.tooMany": "একবারে সর্বোচ্চ {max}টি ফাইল পাঠানো যায়।",
   "picker.skipped": "{count}টি ফাইল পড়া যায়নি, বাদ দেওয়া হয়েছে।",

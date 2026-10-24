@@ -1,0 +1,352 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { LinearGradient } from "expo-linear-gradient";
+import { Linking, Pressable, View } from "react-native";
+
+import { t, type TranslationKey } from "../../i18n";
+import { Text } from "../../utils/disableFontScaling";
+
+import {
+  FILORA_PRIVACY_URL,
+  FILORA_WEBSITE_URL,
+  FILORA_WINDOWS_DOWNLOAD_URL,
+} from "../../utils/links";
+import { gradients, heading, para, radius, useTheme, useThemedStyles, type ThemeColors } from "../../theme";
+import ModalFrame from "../common/ModalFrame";
+
+type HowToUseModalProps = {
+  visible: boolean;
+  onClose: () => void;
+};
+
+type Step = {
+  number: string;
+  title: TranslationKey;
+  body: TranslationKey;
+  bullets?: TranslationKey[];
+};
+
+const STEPS: Step[] = [
+  {
+    number: "1",
+    title: "howto.step1.title",
+    body: "howto.step1.body",
+    bullets: ["howto.step1.b1", "howto.step1.b2"],
+  },
+  {
+    number: "2",
+    title: "howto.step2.title",
+    body: "howto.step2.body",
+    bullets: ["howto.step2.b1", "howto.step2.b2"],
+  },
+  {
+    number: "3",
+    title: "howto.step3.title",
+    body: "howto.step3.body",
+  },
+  {
+    number: "4",
+    title: "howto.step4.title",
+    body: "howto.step4.body",
+    bullets: ["howto.step4.b1", "howto.step4.b2", "howto.step4.b3"],
+  },
+  {
+    number: "5",
+    title: "howto.step5.title",
+    body: "howto.step5.body",
+  },
+  {
+    number: "6",
+    title: "howto.step6.title",
+    body: "howto.step6.body",
+    bullets: [
+      "howto.step6.b1",
+      "howto.step6.b2",
+      "howto.step6.b3",
+      "howto.step6.b4",
+      "howto.step6.b5",
+    ],
+  },
+];
+
+type HelpLink = {
+  icon: keyof typeof Ionicons.glyphMap;
+  title: TranslationKey;
+  subtitle: TranslationKey;
+  url: string;
+};
+
+/** Pinned above "Got it" so it is always visible while the steps scroll. */
+const WINDOWS_DOWNLOAD_LINK: HelpLink = {
+  icon: "desktop-outline",
+  title: "howto.link.windows.title",
+  subtitle: "howto.link.windows.subtitle",
+  url: FILORA_WINDOWS_DOWNLOAD_URL,
+};
+
+const LINKS: HelpLink[] = [
+  {
+    icon: "globe-outline",
+    title: "howto.link.website.title",
+    subtitle: "howto.link.website.subtitle",
+    url: FILORA_WEBSITE_URL,
+  },
+  {
+    icon: "shield-outline",
+    title: "howto.link.privacy.title",
+    subtitle: "howto.link.privacy.subtitle",
+    url: FILORA_PRIVACY_URL,
+  },
+];
+
+export default function HowToUseModal({ visible, onClose }: HowToUseModalProps) {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
+
+  const renderLink = (link: HelpLink) => (
+    <Pressable
+      key={link.url}
+      onPress={() => Linking.openURL(link.url)}
+      style={({ pressed }) => [styles.linkRow, pressed && styles.pressed]}
+    >
+      <View style={styles.linkIcon}>
+        <Ionicons name={link.icon} size={18} color={colors.blueSoft} />
+      </View>
+      <View style={styles.linkCopy}>
+        <Text style={styles.linkTitle}>{t(link.title)}</Text>
+        <Text style={styles.linkSubtitle}>{t(link.subtitle)}</Text>
+      </View>
+      <Ionicons name="open-outline" size={16} color={colors.blueSoft} />
+    </Pressable>
+  );
+
+  return (
+    <ModalFrame
+      visible={visible}
+      onClose={onClose}
+      gap={14}
+      accessibilityLabel={t("howto.close")}
+      header={
+        <View style={styles.titleRow}>
+          <Text style={styles.title}>{t("howto.title")}</Text>
+          <Pressable
+            onPress={onClose}
+            hitSlop={12}
+            style={({ pressed }) => [styles.iconClose, pressed && styles.pressed]}
+            accessibilityLabel={t("common.close")}
+          >
+            <Ionicons name="close" size={20} color={colors.textMuted} />
+          </Pressable>
+        </View>
+      }
+      footer={
+        <View style={styles.footer}>
+          {renderLink(WINDOWS_DOWNLOAD_LINK)}
+          <Pressable
+            onPress={onClose}
+            android_ripple={{ color: "rgba(255,255,255,0.18)" }}
+            style={({ pressed }) => [styles.close, pressed && styles.pressed]}
+          >
+            <LinearGradient
+              colors={gradients.connect}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
+              style={styles.closeGradient}
+            >
+              <Ionicons name="checkmark-circle" size={18} color="#FFFFFF" />
+              <Text style={styles.closeText}>{t("common.gotIt")}</Text>
+            </LinearGradient>
+          </Pressable>
+        </View>
+      }
+    >
+      <Text style={styles.intro}>{t("howto.intro")}</Text>
+      {STEPS.map((step) => (
+        <View key={step.number} style={styles.stepRow}>
+          <View style={styles.stepBadge}>
+            <Text style={styles.stepNumber}>{step.number}</Text>
+          </View>
+          <View style={styles.stepCopy}>
+            <Text style={styles.stepTitle}>{t(step.title)}</Text>
+            <Text style={styles.stepBody}>{t(step.body)}</Text>
+            {step.bullets?.map((item) => (
+              <View key={item} style={styles.bulletRow}>
+                <View style={styles.bulletDot} />
+                <Text style={styles.bulletText}>{t(item)}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      ))}
+
+      <Text style={styles.linksHeading}>{t("howto.linksHeading")}</Text>
+      {LINKS.map(renderLink)}
+    </ModalFrame>
+  );
+}
+
+function createStyles(colors: ThemeColors) {
+  return {
+    titleRow: {
+      flexDirection: "row" as const,
+      alignItems: "center" as const,
+      justifyContent: "space-between" as const,
+      gap: 12,
+    },
+    title: {
+      ...heading(600),
+      flex: 1,
+      minWidth: 0,
+      color: colors.text,
+      fontSize: 16,
+      lineHeight: 23,
+    },
+    iconClose: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      alignItems: "center" as const,
+      justifyContent: "center" as const,
+      backgroundColor: colors.cardAlt,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    intro: {
+      ...para(500),
+      color: colors.textMuted,
+      fontSize: 13,
+      lineHeight: 18,
+    },
+    stepRow: {
+      flexDirection: "row" as const,
+      alignItems: "flex-start" as const,
+      alignSelf: "stretch" as const,
+      gap: 12,
+    },
+    stepBadge: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      backgroundColor: colors.cardAlt,
+      borderWidth: 1,
+      borderColor: colors.border,
+      alignItems: "center" as const,
+      justifyContent: "center" as const,
+      marginTop: 1,
+    },
+    stepNumber: {
+      color: colors.blueSoft,
+      fontSize: 13,
+      fontWeight: "800" as const,
+    },
+    stepCopy: {
+      flex: 1,
+      flexShrink: 1,
+      minWidth: 0,
+      gap: 6,
+    },
+    stepTitle: {
+      ...heading(600),
+      color: colors.text,
+      fontSize: 14,
+      lineHeight: 20,
+    },
+    stepBody: {
+      ...para(500),
+      color: colors.textMuted,
+      fontSize: 13,
+      lineHeight: 18,
+    },
+    bulletRow: {
+      flexDirection: "row" as const,
+      alignItems: "flex-start" as const,
+      alignSelf: "stretch" as const,
+      gap: 8,
+    },
+    bulletDot: {
+      width: 5,
+      height: 5,
+      borderRadius: 3,
+      backgroundColor: colors.blueSoft,
+      marginTop: 7,
+    },
+    bulletText: {
+      ...para(500),
+      flex: 1,
+      flexShrink: 1,
+      minWidth: 0,
+      color: colors.textMuted,
+      fontSize: 13,
+      lineHeight: 19,
+    },
+    linksHeading: {
+      ...heading(),
+      color: colors.blueSoft,
+      fontSize: 13,
+      marginTop: 4,
+    },
+    linkRow: {
+      flexDirection: "row" as const,
+      alignItems: "center" as const,
+      alignSelf: "stretch" as const,
+      gap: 12,
+      backgroundColor: colors.cardAlt,
+      borderRadius: radius.md,
+      paddingVertical: 10,
+      paddingHorizontal: 12,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    linkIcon: {
+      width: 32,
+      height: 32,
+      borderRadius: 10,
+      alignItems: "center" as const,
+      justifyContent: "center" as const,
+      backgroundColor: colors.inputBg,
+    },
+    linkCopy: {
+      flex: 1,
+      minWidth: 0,
+      flexShrink: 1,
+      gap: 2,
+    },
+    linkTitle: {
+      ...heading(600),
+      color: colors.text,
+      fontSize: 13,
+      lineHeight: 18,
+    },
+    linkSubtitle: {
+      ...para(500),
+      color: colors.textMuted,
+      fontSize: 11,
+      lineHeight: 16,
+    },
+    footer: {
+      paddingTop: 4,
+      gap: 8,
+    },
+    close: {
+      borderRadius: radius.md,
+      overflow: "hidden" as const,
+    },
+    closeGradient: {
+      minHeight: 48,
+      flexDirection: "row" as const,
+      alignItems: "center" as const,
+      justifyContent: "center" as const,
+      gap: 8,
+      paddingHorizontal: 16,
+    },
+    closeText: {
+      ...para(700),
+      color: "#FFFFFF",
+      fontSize: 16,
+      backgroundColor: "transparent",
+      lineHeight: 23,
+    },
+    pressed: {
+      opacity: 0.75,
+    },
+  };
+}

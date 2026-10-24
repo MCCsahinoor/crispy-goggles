@@ -1,8 +1,5 @@
-import "./src/lib/cryptoPolyfill";
-import { registerRootComponent } from "expo";
+import "./src/utils/cryptoPolyfill";
 import * as SplashScreen from "expo-splash-screen";
-
-import App from "./App";
 
 SplashScreen.preventAutoHideAsync();
 SplashScreen.setOptions({
@@ -10,4 +7,5 @@ SplashScreen.setOptions({
   fade: true,
 });
 
-registerRootComponent(App);
+// Expo Router registers the root component; keep this import last.
+import "expo-router/entry";

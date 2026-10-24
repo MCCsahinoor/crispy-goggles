@@ -7,7 +7,7 @@ const { AndroidConfig, withAndroidManifest, withDangerousMod, withMainApplicatio
  * `/android` is generated and ignored, so the Kotlin sources live in `native/android` and are
  * copied in on every `expo prebuild`, then registered in MainApplication.
  */
-const SOURCE_DIR = path.join("native", "android", "com", "madarlabs", "filora");
+const SOURCE_DIR = path.join("native", "android", "com", "axuasbiz", "filoraShare");
 const FILES = ["FiloraNetworkModule.kt", "FiloraAppsModule.kt", "FiloraNetworkPackage.kt"];
 const REGISTRATION = "add(FiloraNetworkPackage())";
 
@@ -16,7 +16,7 @@ function withFiloraNetworkSources(config) {
     "android",
     async (mod) => {
       const projectRoot = mod.modRequest.projectRoot;
-      const packagePath = (config.android?.package ?? "com.madarlabs.filora").split(".");
+      const packagePath = (config.android?.package ?? "com.axuasbiz.filoraShare").split(".");
       const target = path.join(
         mod.modRequest.platformProjectRoot,
         "app",
